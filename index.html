@@ -1,0 +1,1510 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>硬體 PM 學習地圖：EVT/DVT/PVT、BOM 成本與產品經理的工作</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --board:#edf1ec; --paper:#fbfcfa; --ink:#14211b; --muted:#55645b; --rule:#ccd6ce; --rule2:#dde5de;
+  --mask:#0e4a38; --on-mask:#f1f6f2; --mask-soft:#d9eadf;
+  --copper:#a8741a; --copper-bright:#d9a441; --copper-soft:#f5e8cb;
+  --signal:#b93a28; --signal-soft:#f7ddd7;
+  --ocean:#1f5f93; --ocean-soft:#dbe8f4;
+  --lilac:#5a4a9a; --lilac-soft:#e7e3f4;
+  --amber:#8a5d0a; --amber-soft:#f6ead0;
+  --hero:#0e4a38; --hero-ink:#eef5f0; --hero-sub:#c9dccf;
+  --s1:#0e4a38; --s2:#a8741a; --s3:#1f5f93; --s4:#7a8a80; --s5:#b93a28; --s6:#5a4a9a;
+  --font:"Noto Sans TC","PingFang TC","Microsoft JhengHei","Heiti TC",system-ui,-apple-system,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --board:#0c1511; --paper:#121e18; --ink:#e5ece7; --muted:#93a79b; --rule:#26372d; --rule2:#1d2c24;
+    --mask:#5cc29b; --on-mask:#07170f; --mask-soft:#16301f;
+    --copper:#e0b25b; --copper-bright:#e0b25b; --copper-soft:#33270f;
+    --signal:#ff8a76; --signal-soft:#3a1a15;
+    --ocean:#7db5ea; --ocean-soft:#14283a;
+    --lilac:#b9a6f2; --lilac-soft:#241d3b;
+    --amber:#e6b459; --amber-soft:#33270f;
+    --hero:#0a3a2c; --hero-ink:#eaf3ed; --hero-sub:#b4cbbc;
+    --s1:#5cc29b; --s2:#e0b25b; --s3:#7db5ea; --s4:#8a9b91; --s5:#ff8a76; --s6:#b9a6f2;
+  }
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:130px}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{transition:none!important}}
+body{margin:0;background:var(--board);color:var(--ink);font:400 16px/1.75 var(--font);-webkit-font-smoothing:antialiased;overflow-wrap:anywhere}
+a{color:var(--mask);text-underline-offset:3px}
+h1,h2,h3,h4{font-weight:800;line-height:1.35;margin:0;letter-spacing:.01em}
+p{margin:0 0 .9em}
+ul,ol{margin:0;padding-left:1.3em}
+li{margin:.25em 0}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:3px solid var(--copper-bright);outline-offset:2px;border-radius:3px}
+.mono{font-family:var(--mono);font-weight:600;letter-spacing:0}
+
+/* ---------- hero ---------- */
+.hero{
+  color:var(--hero-ink);padding:60px 24px 44px;background-color:var(--hero);
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='260' viewBox='0 0 260 260' fill='none' stroke='%23d9a441' stroke-opacity='.2' stroke-width='2'%3E%3Cpath d='M0 40H60L80 60H160L180 40H260'/%3E%3Cpath d='M0 130H40L60 150V210L80 230H260'/%3E%3Cpath d='M130 0V30L150 50'/%3E%3Cpath d='M210 90H260M210 90V170L190 190H130'/%3E%3Ccircle cx='60' cy='40' r='5'/%3E%3Ccircle cx='180' cy='40' r='5'/%3E%3Ccircle cx='190' cy='190' r='5'/%3E%3Ccircle cx='40' cy='130' r='5'/%3E%3C/svg%3E");
+}
+.hero-in{max-width:1120px;margin:0 auto}
+.hero h1{font-size:clamp(36px,6.4vw,68px);font-weight:900;line-height:1.15;letter-spacing:.03em}
+.hero .lead{max-width:41em;font-size:clamp(16px,2vw,19px);color:var(--hero-sub);margin:20px 0 40px;line-height:1.8}
+.howto{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:28px;margin-top:44px;padding-top:28px;border-top:1px solid rgba(217,164,65,.45)}
+.howto h2{font-size:17px;margin-bottom:6px;color:#f3d89a}
+.howto p{font-size:15px;color:var(--hero-sub);margin:0}
+
+/* ---------- route (the PCB trace) ---------- */
+.route{list-style:none;margin:0;padding:0;display:flex;align-items:flex-start;--dot-bg:var(--hero);--dot-ink:var(--hero-ink);--trace:var(--copper-bright);--gate-ink:#f3d89a;--nm:var(--hero-ink)}
+.route li{margin:0}
+.route.light{--dot-bg:var(--paper);--dot-ink:var(--ink);--trace:var(--copper-bright);--gate-ink:var(--muted);--nm:var(--ink)}
+.pad{background:none;border:0;padding:0;text-decoration:none;color:inherit;display:flex;flex-direction:column;align-items:center;gap:8px;width:96px;text-align:center}
+.pad .dot{width:58px;height:58px;border-radius:50%;border:3px solid var(--trace);background:var(--dot-bg);color:var(--dot-ink);display:grid;place-items:center;font:600 13px/1 var(--mono);position:relative;z-index:1;transition:background .15s,color .15s}
+.pad .dot.zh{font-family:var(--font);font-weight:700;font-size:14px}
+.pad .nm{font-size:13px;font-weight:700;color:var(--nm);line-height:1.3}
+a.pad:hover .dot,button.pad:hover .dot{background:var(--trace);color:#14211b}
+button.pad[aria-selected="true"] .dot{background:var(--mask);color:var(--on-mask);box-shadow:0 0 0 4px var(--copper-soft)}
+.gate{flex:1 1 0;min-width:46px;position:relative;padding-top:29px;text-align:center}
+.gate::before{content:"";position:absolute;left:-29px;right:-29px;top:29px;height:4px;margin-top:-2px;background:var(--trace)}
+.gate::after{content:"";position:absolute;left:50%;top:29px;width:13px;height:13px;transform:translate(-50%,-50%) rotate(45deg);background:var(--trace);border:2px solid var(--dot-bg)}
+.gate span{display:block;margin-top:14px;font-size:12px;color:var(--gate-ink);line-height:1.3;position:relative;z-index:2}
+@media (max-width:760px){
+  .route{flex-direction:column}
+  .pad{flex-direction:row;width:auto;text-align:left;gap:14px}
+  .gate{flex:none;min-height:54px;padding:0;text-align:left;margin-left:0}
+  .gate::before{left:27px;right:auto;top:-1px;bottom:-1px;width:4px;height:auto;margin:0 0 0 0}
+  .gate::after{left:29px;top:50%}
+  .gate span{position:absolute;left:52px;top:50%;margin:0;transform:translateY(-50%)}
+}
+
+/* ---------- sticky bar ---------- */
+.bar{position:sticky;top:0;z-index:30;background:color-mix(in srgb,var(--paper) 94%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--rule)}
+.bar-in{max-width:1240px;margin:0 auto;padding:10px 20px;display:flex;flex-wrap:wrap;gap:10px 24px;align-items:center}
+.seggrp{display:flex;align-items:center;gap:0;border:1px solid var(--rule);border-radius:6px;overflow:hidden;background:var(--paper)}
+.seggrp .sl{padding:6px 12px;font-size:13px;font-weight:700;color:var(--muted);border-right:1px solid var(--rule);background:var(--board)}
+.seggrp button{border:0;background:transparent;padding:6px 14px;font-size:14px;font-weight:500;border-right:1px solid var(--rule2)}
+.seggrp button:last-child{border-right:0}
+.seggrp button[aria-pressed="true"]{background:var(--mask);color:var(--on-mask);font-weight:700}
+.bar .hint{font-size:13px;color:var(--muted);margin:0;flex:1 1 220px}
+.mnav{display:none;width:100%;overflow-x:auto;white-space:nowrap;gap:6px;padding-bottom:2px}
+.mnav a{display:inline-block;padding:3px 10px;border:1px solid var(--rule);border-radius:99px;font-size:13px;text-decoration:none;color:var(--ink);background:var(--paper)}
+
+/* ---------- shell ---------- */
+.shell{max-width:1240px;margin:0 auto;padding:0 20px;display:grid;grid-template-columns:200px minmax(0,1fr);gap:40px}
+.toc{position:sticky;top:78px;align-self:start;padding:28px 0;font-size:14px}
+.toc a{display:block;padding:6px 12px;color:var(--muted);text-decoration:none;border-left:3px solid var(--rule);line-height:1.4}
+.toc a:hover{color:var(--ink)}
+.toc a.on{color:var(--mask);border-left-color:var(--copper-bright);font-weight:700;background:var(--paper)}
+main{padding:32px 0 80px;min-width:0}
+@media (max-width:980px){.shell{grid-template-columns:minmax(0,1fr)}.toc{display:none}.mnav{display:flex}.bar .hint{display:none}}
+
+section.sec{padding:36px 0 20px;border-top:3px solid var(--mask);margin-top:44px}
+section.sec:first-child{margin-top:0}
+.sec>h2{font-size:clamp(26px,3.6vw,36px);font-weight:900}
+.sec>.desc{font-size:17px;color:var(--muted);max-width:42em;margin:8px 0 28px}
+.sec h3{font-size:21px;margin:38px 0 12px}
+.sec h3::before{content:"";display:inline-block;width:10px;height:10px;background:var(--copper-bright);margin-right:10px;transform:rotate(45deg) translateY(-1px)}
+.sec h4{font-size:16px;margin:0 0 6px}
+.sub{color:var(--muted);font-size:15px;margin:-4px 0 14px;max-width:46em}
+
+/* ---------- notes ---------- */
+.note{border-left:5px solid var(--copper-bright);background:var(--copper-soft);padding:12px 16px;border-radius:0 6px 6px 0;margin:16px 0;font-size:15px}
+.note.warn{border-left-color:var(--signal);background:var(--signal-soft)}
+.note.ok{border-left-color:var(--mask);background:var(--mask-soft)}
+.note p:last-child{margin-bottom:0}
+.note b{font-weight:700}
+
+/* ---------- tags ---------- */
+.tag{display:inline-block;font-size:12px;font-weight:700;line-height:1;padding:4px 8px;border-radius:3px;margin:0 4px 0 0;white-space:nowrap;vertical-align:middle}
+.t-brand{background:var(--mask-soft);color:var(--mask)}
+.t-odm{background:var(--ocean-soft);color:var(--ocean)}
+.t-con{background:var(--amber-soft);color:var(--amber)}
+.t-srv{background:var(--lilac-soft);color:var(--lilac)}
+.t-must{background:var(--mask);color:var(--on-mask)}
+.t-imp{background:var(--copper-soft);color:var(--amber)}
+.t-plus{background:var(--rule2);color:var(--muted)}
+.chip{display:inline-block;padding:3px 10px;border:1px solid var(--rule);border-radius:99px;font-size:13px;margin:2px 4px 2px 0;background:var(--paper)}
+
+/* ---------- hide logic for filters ---------- */
+body[data-seg="consumer"] [data-seg-only="server"],
+body[data-seg="server"] [data-seg-only="consumer"],
+body[data-role="brand"] [data-role-only="odm"],
+body[data-role="odm"] [data-role-only="brand"]{display:none!important}
+
+/* ---------- tables ---------- */
+.tbl{overflow-x:auto;margin:14px 0 20px;border:1px solid var(--rule);border-radius:6px;background:var(--paper)}
+table{border-collapse:collapse;width:100%;font-size:15px;min-width:560px}
+th,td{padding:10px 14px;text-align:left;vertical-align:top;border-bottom:1px solid var(--rule2);line-height:1.6}
+thead th{background:var(--mask);color:var(--on-mask);font-weight:700;border-bottom:0;white-space:nowrap}
+tbody th{font-weight:700;background:var(--board);width:9em;min-width:7em}
+tbody tr:last-child th,tbody tr:last-child td{border-bottom:0}
+td ul{padding-left:1.1em}
+td[data-role-only="brand"],th[data-role-only="brand"]{border-top:0}
+
+/* ---------- value chain ---------- */
+.chain{list-style:none;padding:0;margin:14px 0;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:0;counter-reset:c}
+.chain li{margin:0;padding:14px 14px 14px 16px;background:var(--paper);border:1px solid var(--rule);border-left-width:0;position:relative}
+.chain li:first-child{border-left-width:1px;border-radius:6px 0 0 6px}
+.chain li:last-child{border-radius:0 6px 6px 0}
+.chain li::after{content:"";position:absolute;right:-9px;top:50%;width:16px;height:16px;transform:translateY(-50%) rotate(45deg);background:var(--paper);border-top:1px solid var(--rule);border-right:1px solid var(--rule);z-index:2}
+.chain li:last-child::after{display:none}
+.chain li.me{background:var(--mask-soft)}
+.chain li.me::after{background:var(--mask-soft)}
+.chain b{display:block;font-size:15px;margin-bottom:4px}
+.chain span{font-size:13.5px;color:var(--muted);line-height:1.6;display:block}
+@media (max-width:860px){.chain{grid-template-columns:1fr}.chain li,.chain li:first-child,.chain li:last-child{border-left-width:1px;border-radius:0;border-top-width:0}.chain li::after{display:none}.chain li:first-child{border-top-width:1px}}
+
+/* ---------- accordion rows ---------- */
+details.row{border:1px solid var(--rule);background:var(--paper);border-radius:6px;margin:8px 0}
+details.row>summary{list-style:none;cursor:pointer;padding:12px 16px 12px 44px;position:relative;display:flex;flex-wrap:wrap;gap:4px 10px;align-items:center}
+details.row>summary::-webkit-details-marker{display:none}
+details.row>summary::before{content:"";position:absolute;left:18px;top:50%;width:8px;height:8px;border-right:3px solid var(--copper);border-bottom:3px solid var(--copper);transform:translateY(-70%) rotate(-45deg);transition:transform .15s}
+details.row[open]>summary::before{transform:translateY(-50%) rotate(45deg)}
+details.row[open]>summary{border-bottom:1px solid var(--rule2)}
+details.row .ttl{font-weight:800;font-size:16.5px}
+details.row .en{color:var(--muted);font-size:13.5px}
+details.row .tags{margin-left:auto}
+details.row .body{padding:14px 18px 18px}
+details.row dl{margin:0;display:grid;grid-template-columns:8.5em minmax(0,1fr);gap:8px 16px}
+details.row dt{font-weight:700;color:var(--mask);font-size:14.5px}
+details.row dd{margin:0}
+details.row dd ul{padding-left:1.1em}
+@media (max-width:640px){details.row dl{grid-template-columns:1fr;gap:2px}details.row dd{margin-bottom:10px}details.row .tags{margin-left:0}}
+
+/* ---------- stage explorer ---------- */
+.stepper{background:var(--paper);border:1px solid var(--rule);border-radius:6px;padding:22px 18px 16px;margin:16px 0}
+.panel{background:var(--paper);border:1px solid var(--rule);border-top:0;border-radius:0 0 6px 6px;padding:22px 22px 26px;margin-top:-17px;padding-top:34px}
+.panel-head h3{font-size:26px;margin:0 0 4px}
+.panel-head h3::before{display:none}
+.panel-head .acr{font-family:var(--mono);background:var(--mask);color:var(--on-mask);padding:2px 10px;border-radius:4px;margin-right:10px;font-size:.8em}
+.panel-head .q{font-size:19px;font-weight:700;color:var(--copper);margin:0 0 4px}
+.panel-head .dur{color:var(--muted);font-size:14.5px}
+.kv{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:0;margin:18px 0;border:1px solid var(--rule);border-radius:6px;overflow:hidden}
+.kv div{padding:10px 14px;border-right:1px solid var(--rule2);border-bottom:1px solid var(--rule2);margin:-1px -1px 0 0}
+.kv dt{font-size:13px;color:var(--muted);font-weight:700}
+.kv dd{margin:0;font-size:15px}
+.blk{margin:22px 0}
+.blk h4{margin-bottom:8px}
+.checks{list-style:none;padding:0}
+.checks li{padding-left:28px;position:relative}
+.checks li::before{content:"";position:absolute;left:2px;top:.45em;width:14px;height:14px;border:2px solid var(--mask);border-radius:3px}
+.checks li::after{content:"";position:absolute;left:7px;top:.5em;width:4px;height:8px;border-right:2.5px solid var(--mask);border-bottom:2.5px solid var(--mask);transform:rotate(40deg)}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;margin:22px 0}
+.col{border:1px solid var(--rule);border-top-width:4px;border-radius:6px;padding:14px 18px;background:var(--board)}
+.col.con{border-top-color:var(--amber)} .col.srv{border-top-color:var(--lilac)}
+.col.brand{border-top-color:var(--mask)} .col.odm{border-top-color:var(--ocean)}
+.col h4{margin-bottom:6px}
+.risk td:first-child{font-weight:700;width:36%}
+
+/* cost of change */
+.coc{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;align-items:end;height:150px;margin:14px 0 4px}
+.coc div{display:flex;flex-direction:column;justify-content:flex-end;height:100%;font-size:12.5px;text-align:center;color:var(--muted)}
+.coc i{display:block;background:var(--copper-bright);border-radius:3px 3px 0 0;margin-bottom:4px}
+.coc div:nth-child(5) i{background:var(--signal)}
+
+/* ---------- BOM tree ---------- */
+.trees{display:grid;grid-template-columns:repeat(auto-fit,minmax(310px,1fr));gap:16px;margin:12px 0}
+.tree{border:1px solid var(--rule);background:var(--paper);border-radius:6px;padding:14px 18px}
+.tree h4{margin-bottom:8px}
+.tree ul{list-style:none;padding-left:0;margin:0;font-size:14.5px}
+.tree ul ul{padding-left:20px;margin:2px 0 4px;border-left:2px solid var(--copper-bright)}
+.tree li{margin:3px 0;padding-left:0}
+.tree li>b{font-weight:700}
+.tree small{color:var(--muted)}
+
+/* stacked bars */
+.stk{display:flex;height:34px;border-radius:4px;overflow:hidden;margin:6px 0}
+.stk i{display:block;height:100%;min-width:2px}
+.legend{display:flex;flex-wrap:wrap;gap:4px 16px;font-size:13.5px;margin:6px 0 12px}
+.legend span::before{content:"";display:inline-block;width:11px;height:11px;margin-right:6px;border-radius:2px;background:var(--c);vertical-align:-1px}
+.s1{background:var(--s1)} .s2{background:var(--s2)} .s3{background:var(--s3)} .s4{background:var(--s4)} .s5{background:var(--s5)} .s6{background:var(--s6)}
+.stackrow{margin:14px 0}
+.stackrow b{font-size:15px}
+
+/* waterfall steps */
+.steps{list-style:none;padding:0;display:flex;flex-wrap:wrap;gap:0;margin:14px 0}
+.steps li{margin:0;padding:10px 16px 10px 22px;background:var(--paper);border:1px solid var(--rule);border-left-width:0;font-size:14.5px;position:relative;flex:1 1 150px;clip-path:polygon(0 0,calc(100% - 14px) 0,100% 50%,calc(100% - 14px) 100%,0 100%,14px 50%)}
+.steps li b{display:block;font-size:13px;color:var(--muted)}
+
+/* ---------- calculator ---------- */
+.calc{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:0;border:1px solid var(--rule);border-radius:6px;overflow:hidden;background:var(--paper);margin:14px 0}
+.calc-in{padding:18px;display:grid;grid-template-columns:1fr 1fr;gap:12px;border-right:1px solid var(--rule);align-content:start}
+.calc-in label{display:flex;flex-direction:column;gap:3px;font-size:13.5px;font-weight:700;color:var(--muted);line-height:1.4}
+.calc-in input{font:500 16px var(--mono);padding:7px 9px;border:1px solid var(--rule);border-radius:4px;background:var(--board);color:var(--ink);width:100%}
+.calc-out{padding:18px;background:var(--board)}
+.big{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px}
+.big div{background:var(--paper);border:1px solid var(--rule);border-radius:4px;padding:8px 12px}
+.big small{display:block;font-size:12.5px;color:var(--muted);font-weight:700}
+.big b{font:600 21px var(--mono)}
+.big .hl{border-color:var(--copper-bright);border-width:2px}
+.calc-out table{min-width:0;font-size:14px}
+.calc-out th,.calc-out td{padding:6px 8px}
+.calc-out thead th{background:var(--rule2);color:var(--ink)}
+.neg{color:var(--signal);font-weight:700}
+@media (max-width:860px){.calc{grid-template-columns:1fr}.calc-in{border-right:0;border-bottom:1px solid var(--rule)}}
+@media (max-width:420px){.calc-in{grid-template-columns:1fr}}
+
+/* ---------- generic grids ---------- */
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;margin:12px 0}
+.box{border:1px solid var(--rule);background:var(--paper);border-radius:6px;padding:12px 16px}
+.box b{display:block;margin-bottom:2px}
+.box p{font-size:14.5px;color:var(--muted);margin:0}
+.box.lined{border-left:4px solid var(--copper-bright)}
+.theory{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px}
+.theory .box dl{margin:6px 0 0;font-size:14.5px}
+.theory .box dt{font-weight:700;color:var(--mask);display:inline}
+.theory .box dd{display:inline;margin:0}
+.theory .box dd::after{content:"";display:block;height:4px}
+.topics{margin:10px 0;display:grid;grid-template-columns:9em minmax(0,1fr);gap:8px 14px;font-size:15px}
+.topics dt{font-weight:700}
+.topics dd{margin:0}
+@media (max-width:560px){.topics{grid-template-columns:1fr}}
+
+/* ---------- roadmap ---------- */
+.seg2{display:inline-flex;border:1px solid var(--rule);border-radius:6px;overflow:hidden;margin:4px 0 14px}
+.seg2 button{border:0;background:var(--paper);padding:8px 18px;font-weight:700;border-right:1px solid var(--rule)}
+.seg2 button:last-child{border-right:0}
+.seg2 button[aria-pressed="true"]{background:var(--mask);color:var(--on-mask)}
+.prog{display:flex;align-items:center;gap:12px;margin:0 0 18px;font-size:14px;color:var(--muted)}
+.prog .barbg{flex:1;height:10px;background:var(--rule2);border-radius:99px;overflow:hidden;max-width:360px}
+.prog .barfg{height:100%;background:var(--mask);width:0;transition:width .25s}
+.road{list-style:none;padding:0;margin:0;position:relative}
+.road>li{position:relative;padding:0 0 28px 64px;margin:0}
+.road>li::before{content:"";position:absolute;left:21px;top:44px;bottom:0;width:4px;background:var(--copper-bright)}
+.road>li:last-child::before{display:none}
+.road .mo{position:absolute;left:0;top:0;width:46px;height:46px;border-radius:50%;border:3px solid var(--copper-bright);background:var(--paper);display:grid;place-items:center;font:600 15px var(--mono)}
+.road h3{margin:0 0 2px !important;font-size:19px}
+.road h3::before{display:none}
+.road .goal{color:var(--muted);font-size:15px;margin-bottom:10px}
+.road .tasks{list-style:none;padding:0;margin:0 0 10px}
+.road .tasks li{margin:4px 0}
+.road .tasks label{display:flex;gap:10px;align-items:flex-start;cursor:pointer;font-size:15px}
+.road .tasks input{margin-top:.45em;width:17px;height:17px;accent-color:var(--mask);flex:none}
+.road .tasks input:checked+span{color:var(--muted);text-decoration:line-through}
+.road .out{font-size:14.5px;background:var(--copper-soft);padding:8px 12px;border-radius:4px}
+
+/* ---------- glossary / interview ---------- */
+.filters{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 14px}
+.fchip{border:1px solid var(--rule);background:var(--paper);padding:4px 12px;border-radius:99px;font-size:14px}
+.fchip[aria-pressed="true"]{background:var(--mask);color:var(--on-mask);border-color:var(--mask);font-weight:700}
+.search{width:100%;max-width:460px;padding:10px 14px;font:inherit;border:2px solid var(--rule);border-radius:6px;background:var(--paper);color:var(--ink)}
+.search:focus{border-color:var(--copper-bright);outline:none}
+.gl{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:10px;margin-top:10px}
+.gl .it{border:1px solid var(--rule);background:var(--paper);border-radius:6px;padding:10px 14px}
+.gl .it h4{font-size:15.5px;margin:0}
+.gl .it h4 .mono{font-size:16px;color:var(--mask)}
+.gl .it .full{font-size:13px;color:var(--muted);margin:0 0 3px}
+.gl .it p{font-size:14.5px;margin:0}
+.gl .it .c{float:right;margin-left:8px}
+.count{font-size:14px;color:var(--muted);margin:6px 0}
+.qa .look{background:var(--board);border-radius:4px;padding:8px 12px;margin-bottom:10px;font-size:14.5px}
+.qa .look b{color:var(--copper)}
+
+footer{max-width:1240px;margin:0 auto;padding:30px 20px 60px;color:var(--muted);font-size:14px;border-top:1px solid var(--rule)}
+</style>
+</head>
+<body data-seg="all" data-role="all">
+
+<header class="hero" id="top">
+  <div class="hero-in">
+    <h1>硬體 PM 學習地圖</h1>
+    <p class="lead">寫給有專案管理底子、沒有工程背景，想進入消費性電子與伺服器產業的你。這份地圖只聚焦一件事：一個硬體產品從概念走到量產，業界通常怎麼走，產品經理在每一站要做什麼。</p>
+
+    <ol class="route" aria-label="硬體開發流程，點擊可跳到對應階段">
+      <li><a class="pad" href="#flow" data-stage="0"><span class="dot zh">概念</span><span class="nm">概念規劃</span></a></li>
+      <li class="gate" aria-hidden="true"><span>Kick-off</span></li>
+      <li><a class="pad" href="#flow" data-stage="1"><span class="dot">EVT</span><span class="nm">工程驗證</span></a></li>
+      <li class="gate" aria-hidden="true"><span>Spec Freeze</span></li>
+      <li><a class="pad" href="#flow" data-stage="2"><span class="dot">DVT</span><span class="nm">設計驗證</span></a></li>
+      <li class="gate" aria-hidden="true"><span>Design Freeze</span></li>
+      <li><a class="pad" href="#flow" data-stage="3"><span class="dot">PVT</span><span class="nm">生產驗證</span></a></li>
+      <li class="gate" aria-hidden="true"><span>MP Release</span></li>
+      <li><a class="pad" href="#flow" data-stage="4"><span class="dot">MP</span><span class="nm">量產上市</span></a></li>
+    </ol>
+
+    <div class="howto">
+      <div>
+        <h2>你的起點</h2>
+        <p>你已經會專案管理，缺的是「硬體語言」：開發流程（EVT/DVT/PVT）、成本結構（BOM）、供應鏈與製造。這份地圖就是補這三塊，再加上品牌端與代工端的差異。</p>
+      </div>
+      <div>
+        <h2>怎麼讀</h2>
+        <p>頁面上方的「檢視設定」可以切換產業與角色，頁面會只留下與你相關的內容。第一次建議全部都看，感受消費性電子與伺服器、品牌端與代工端的差異。</p>
+      </div>
+      <div>
+        <h2>先講一個提醒</h2>
+        <p>各公司對階段的命名、樣機數量、時程都不同。本頁的數字是「常見範圍」，用來建立直覺；面試或到職後，要以該公司的實際定義為準。</p>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="bar" role="region" aria-label="檢視設定">
+  <div class="bar-in">
+    <div class="seggrp" role="group" aria-label="產業">
+      <span class="sl">產業</span>
+      <button data-set="seg" data-val="all" aria-pressed="true">全部</button>
+      <button data-set="seg" data-val="consumer" aria-pressed="false">消費性電子</button>
+      <button data-set="seg" data-val="server" aria-pressed="false">伺服器</button>
+    </div>
+    <div class="seggrp" role="group" aria-label="角色">
+      <span class="sl">角色</span>
+      <button data-set="role" data-val="all" aria-pressed="true">全部</button>
+      <button data-set="role" data-val="brand" aria-pressed="false">品牌端</button>
+      <button data-set="role" data-val="odm" aria-pressed="false">代工端</button>
+    </div>
+    <p class="hint">選擇後，流程、對照表、技能與職稱都會跟著篩選。</p>
+    <nav class="mnav" aria-label="章節導覽"></nav>
+  </div>
+</div>
+
+<div class="shell">
+<aside class="toc" aria-label="章節導覽">
+  <a href="#map">產業地圖與職位</a>
+  <a href="#flow">開發流程</a>
+  <a href="#bom">BOM 與成本</a>
+  <a href="#work">PM 的工作</a>
+  <a href="#skills">技能與工具</a>
+  <a href="#theory">基礎知識與理論</a>
+  <a href="#plan">學習時程</a>
+  <a href="#interview">面試題庫</a>
+  <a href="#glossary">名詞速查</a>
+</aside>
+
+<main>
+
+<!-- =============== MAP =============== -->
+<section class="sec" id="map" data-title="產業地圖與職位">
+  <h2>產業地圖與職位</h2>
+  <p class="desc">先搞清楚誰在做什麼，才知道自己要往哪個位置走。品牌端和代工端的「PM」，其實是很不一樣的工作。</p>
+
+  <h3>硬體產業的價值鏈</h3>
+  <ol class="chain">
+    <li><b>零組件供應商</b><span>晶片（SoC／CPU／GPU）、記憶體、面板、電池、被動元件、機構件。決定「能用什麼料、多少錢、多久到貨」。</span></li>
+    <li class="me"><b>代工與設計製造</b><span>ODM／OEM／EMS。負責（部分）設計、打樣、組裝、測試、出貨。例：廣達、緯創、英業達、仁寶、和碩、鴻海、緯穎。</span></li>
+    <li class="me"><b>品牌商</b><span>定義產品與規格、品牌與定價、通路與售後。例：華碩、宏碁、微星、技嘉、Apple。</span></li>
+    <li><b>通路與客戶</b><span>電商、實體通路、經銷商、企業客戶、雲端服務供應商（CSP）、系統整合商。</span></li>
+    <li><b>終端使用者</b><span>消費者，或營運資料中心的企業。他們的使用情境決定規格與可靠度要求。</span></li>
+  </ol>
+  <p class="sub">你的目標職位落在中間兩格。許多公司橫跨多種角色（例如華碩、技嘉、微星同時有品牌與伺服器業務），這裡的分類只是幫你建立架構。</p>
+
+  <h3>設計與製造的合作模式</h3>
+  <div class="tbl"><table>
+    <thead><tr><th>模式</th><th>誰設計</th><th>誰製造</th><th>品牌歸誰</th><th>PM 要注意</th></tr></thead>
+    <tbody>
+      <tr><th>OEM</th><td>品牌客戶</td><td>代工廠</td><td>客戶</td><td>代工端依客戶規格與圖面生產，重點是製程、良率、交期</td></tr>
+      <tr><th>ODM</th><td>代工廠</td><td>代工廠</td><td>客戶（貼牌）</td><td>代工廠提供現成設計或平台，品牌商選用並少量客製</td></tr>
+      <tr><th>JDM</th><td>雙方共同</td><td>代工廠</td><td>客戶</td><td>分工與智慧財產權界線要講清楚，溝通成本高</td></tr>
+      <tr><th>EMS</th><td>客戶</td><td>以電子組裝為主（SMT、組裝、測試）</td><td>客戶</td><td>設計責任在客戶，EMS 管好製造與供應鏈</td></tr>
+      <tr><th>OBM</th><td>自己（可能搭配 ODM）</td><td>自己或外包</td><td>自己</td><td>品牌端的典型型態，同時管設計、供應鏈與市場</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>品牌端 vs 代工端：工作內容差在哪</h3>
+  <div class="tbl"><table>
+    <thead><tr><th></th><th data-role-only="brand">品牌端</th><th data-role-only="odm">代工端（ODM／OEM）</th></tr></thead>
+    <tbody>
+      <tr><th>核心使命</th><td data-role-only="brand">做出「賣得動、而且賺錢」的產品</td><td data-role-only="odm">把客戶的產品「準時、依品質、依成本」做出來，部分專案連設計一起做</td></tr>
+      <tr><th>主要客戶</th><td data-role-only="brand">消費者、通路、企業客戶</td><td data-role-only="odm">品牌商、雲端大廠</td></tr>
+      <tr><th>決策重點</th><td data-role-only="brand">市場定位、規格、售價、上市時間、通路</td><td data-role-only="odm">報價、交期、良率、產能與人力、客戶滿意度</td></tr>
+      <tr><th>成本視角</th><td data-role-only="brand">先定售價與目標毛利，再倒推可接受的成本</td><td data-role-only="odm">計算報價成本加上合理利潤，同時承擔良率與物料風險；毛利通常比品牌端薄</td></tr>
+      <tr><th>主要 KPI</th><td data-role-only="brand">營收、毛利率、市占、sell-through、庫存週轉、上市準時度</td><td data-role-only="odm">準時交付（OTD）、良率、成本達成、客戶滿意度、產能稼動率</td></tr>
+      <tr><th>主要風險</th><td data-role-only="brand">庫存滯銷、價格戰、品質客訴、錯過檔期</td><td data-role-only="odm">客戶頻繁改規格、毛利被侵蝕、缺料、良率不穩</td></tr>
+      <tr><th>常見職稱</th><td data-role-only="brand">Product Manager／Product Planner、PMM、Brand Manager、Channel／Brand Operations、NPI PM</td><td data-role-only="odm">NPI Program／Project Manager、Customer PM（Account PM）、TPM</td></tr>
+      <tr><th>對無工程背景者</th><td data-role-only="brand">偏重市場、商業與溝通，但常期待有產業經驗；入門職位相對少</td><td data-role-only="odm">專案管理能力是強項；技術名詞多、學習曲線陡，但 NPI／專案類職位數量通常較多（常見路徑，非保證）</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>消費性電子 vs 伺服器：產品邏輯差在哪</h3>
+  <div class="tbl"><table>
+    <thead><tr><th></th><th data-seg-only="consumer">消費性電子</th><th data-seg-only="server">伺服器／資料中心</th></tr></thead>
+    <tbody>
+      <tr><th>時程驅動</th><td data-seg-only="consumer">上市檔期（年底購物季、開學季、發表會）與競品節奏</td><td data-seg-only="server">CPU／GPU 平台世代與客戶部署計畫，常常是晶片商的時程決定你的時程</td></tr>
+      <tr><th>生命週期</th><td data-seg-only="consumer">新機汰換快，常見 1～2 年一代</td><td data-seg-only="server">平台支援期較長，常見 3～5 年甚至更久，需要長期零件與韌體支援</td></tr>
+      <tr><th>量與客製</th><td data-seg-only="consumer">量大，SKU 相對固定，單價較低</td><td data-seg-only="server">量相對小、單價高、配置多（CTO／BTO），大客戶常有客製需求</td></tr>
+      <tr><th>客戶</th><td data-seg-only="consumer">消費者與通路</td><td data-seg-only="server">企業、系統整合商、雲端服務供應商（CSP）</td></tr>
+      <tr><th>成本結構</th><td data-seg-only="consumer">材料占比高，同時外觀、模具、包裝、認證等 NRE 也不輕</td><td data-seg-only="server">材料占比更高，CPU／GPU／記憶體／儲存主導成本；AI 伺服器的 GPU 影響極大</td></tr>
+      <tr><th>驗證重點</th><td data-seg-only="consumer">外觀品質（CMF）、跌落與按鍵壽命、電池安全、無線效能、使用體驗、法規認證</td><td data-seg-only="server">長時間穩定（24x7）、相容性、散熱與功耗、效能、BIOS／BMC 韌體、可擴充與可維護（RAS）</td></tr>
+      <tr><th>供應鏈風險</th><td data-seg-only="consumer">面板、電池、晶片的供貨與價格；促銷週期帶來的庫存風險</td><td data-seg-only="server">GPU／CPU／高階記憶體的配給（allocation）、長交期料</td></tr>
+      <tr><th>PM 的重心</th><td data-seg-only="consumer">定位、價格、上市時機、成本控制、通路</td><td data-seg-only="server">平台時程、客戶需求對齊、驗證與相容性、交付與長期支援</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>職稱地圖：你可能應徵的位置</h3>
+  <div class="note warn"><p><b>職稱混用非常嚴重。</b>同樣叫「Product Manager」，在 A 公司是定義產品的人，在 B 公司可能是推進專案的人。投遞前請看職缺內容（JD）的實際工作，不要只看職稱。</p></div>
+  <div id="roles"></div>
+</section>
+
+<!-- =============== FLOW =============== -->
+<section class="sec" id="flow" data-title="開發流程">
+  <h2>開發流程：從概念到量產</h2>
+  <p class="desc">這是整份地圖的核心。點選下方的每一站，看這一階段在驗證什麼、要做哪些事、什麼條件才能過關，以及 PM 在這裡要扛什麼。</p>
+
+  <div class="note">
+    <p><b>為什麼要分階段？</b>硬體有模具、治具、認證與庫存這些「花了就收不回」的成本，越晚改設計代價越高。所以業界用階段關卡（Stage-Gate）把風險往前推：每個階段結束都有一道關卡，檢查「出關條件」是否達成，再決定繼續、修正後重審，或停止。</p>
+    <div class="coc" aria-label="設計變更成本隨階段上升（示意）">
+      <div><i style="height:8%"></i>概念</div>
+      <div><i style="height:22%"></i>EVT</div>
+      <div><i style="height:45%"></i>DVT</div>
+      <div><i style="height:72%"></i>PVT</div>
+      <div><i style="height:100%"></i>量產後</div>
+    </div>
+    <p style="font-size:13px;color:var(--muted);margin:0">示意圖：設計變更的成本與衝擊隨階段上升，並非實測數字。</p>
+  </div>
+
+  <div class="stepper"><ol class="route light" id="stepper" role="tablist" aria-label="開發階段"></ol></div>
+  <div id="stagePanel" class="panel" role="tabpanel" aria-live="polite"></div>
+
+  <h3>EVT／DVT／PVT 一張表比較</h3>
+  <div class="tbl"><table>
+    <thead><tr><th></th><th>EVT</th><th>DVT</th><th>PVT</th></tr></thead>
+    <tbody>
+      <tr><th>核心問題</th><td>做得出來嗎？（可行性）</td><td>符合所有規格嗎？（設計驗證）</td><td>量產得出來嗎？（製程驗證）</td></tr>
+      <tr><th>設計狀態</th><td>原型，PCB 與結構常改版</td><td>接近定版，只修重大問題</td><td>凍結，變更需嚴格核准</td></tr>
+      <tr><th>樣機製作</th><td>手工或試作線，少量</td><td>量產級材料與設計，小批</td><td>量產線、量產治具、量產人員</td></tr>
+      <tr><th>模具與治具</th><td>軟模、CNC、3D 列印、簡易治具</td><td>硬模試模（T1、T2…）、治具開發</td><td>量產模具與治具穩定運作</td></tr>
+      <tr><th>常見數量</th><td>數十台</td><td>數百台</td><td>數百至數千台</td></tr>
+      <tr><th>主要測試</th><td>功能、效能、關鍵風險驗證</td><td>可靠度、法規認證、相容性</td><td>良率、產能、製程能力、包裝運輸</td></tr>
+      <tr><th>變更成本</th><td>低</td><td>中高（可能改模、重測認證）</td><td>很高（牽動量產與庫存）</td></tr>
+      <tr><th>主導者</th><td>研發</td><td>研發＋品保＋認證</td><td>製造＋品保＋供應鏈</td></tr>
+      <tr><th>PM 關注</th><td>規格、風險、成本差距</td><td>認證時程、變更管理、BOM 凍結</td><td>良率、爬坡、量產放行</td></tr>
+    </tbody>
+  </table></div>
+  <p class="sub">注意：數量與命名因公司、產品複雜度而異。有些公司會多一個 Pilot Run（PP）或 MVT 階段；伺服器常用 Proto／EVT／DVT／PVT／MP，並額外有平台 bring-up 與客戶驗證。</p>
+
+  <h3>流程中的關鍵關卡</h3>
+  <div class="tbl"><table>
+    <thead><tr><th>關卡</th><th>通常發生在</th><th>代表意義</th><th>PM 要確認</th></tr></thead>
+    <tbody>
+      <tr><th>Kick-off（立項）</th><td>概念 → EVT</td><td>Business case 與目標被核准，資源到位</td><td>目標成本、範圍、時程假設、各部門 owner</td></tr>
+      <tr><th>Spec Freeze（規格凍結）</th><td>EVT 後期</td><td>規格不再隨意增減，之後變更走正式流程</td><td>規格、成本、時程的取捨已取得共識並簽核</td></tr>
+      <tr><th>Design Freeze（設計凍結）</th><td>DVT 後期</td><td>設計定版，只處理重大問題</td><td>可靠度與認證狀態、open issue、模具狀態</td></tr>
+      <tr><th>BOM Freeze（BOM 凍結）</th><td>DVT 末 ～ PVT 初</td><td>料號與供應商定案，可下量產訂單</td><td>替代料、長交期料、價格與 MOQ</td></tr>
+      <tr><th>MP Release（量產放行）</th><td>PVT 後期</td><td>良率、品質、供應鏈達標，由品牌或客戶簽核</td><td>出關條件、waiver（特採）清單、爬坡計畫</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<!-- =============== BOM =============== -->
+<section class="sec" id="bom" data-title="BOM 與成本">
+  <h2>BOM 與成本結構</h2>
+  <p class="desc">硬體的獲利，常常就是「幾塊錢」的差別。PM 不一定要會報價，但一定要看得懂 BOM、算得出毛利，並在規格與成本之間做取捨。</p>
+
+  <h3>BOM 是什麼</h3>
+  <p>BOM（Bill of Materials，物料清單）是一個產品用到的所有零組件的清單，包含料號、描述、數量、供應商與單價，通常是樹狀的層級結構：成品 → 子組件 → 零件。</p>
+  <div class="tbl"><table>
+    <thead><tr><th></th><th>EBOM（工程 BOM）</th><th>MBOM（製造 BOM）</th></tr></thead>
+    <tbody>
+      <tr><th>視角</th><td>研發的設計視角，依功能與設計結構編排</td><td>製造的生產視角，依組裝順序與生產需求編排</td></tr>
+      <tr><th>內容</th><td>設計所需的零件</td><td>加上製程耗材、包材、治具、組裝用料等實際要買的東西</td></tr>
+      <tr><th>誰維護</th><td>研發，在 PLM 系統中</td><td>製造／生管／供應鏈，供 ERP 與 MRP 使用</td></tr>
+      <tr><th>PM 要留意</th><td>設計變更（ECN）會先改這份</td><td>EBOM 與 MBOM 不一致，是缺料與成本錯估的常見原因</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="trees">
+    <div class="tree" data-seg-only="consumer">
+      <h4>BOM 長什麼樣：真無線藍牙耳機（示意）</h4>
+      <ul>
+        <li><b>成品：耳機＋充電盒</b>
+          <ul>
+            <li><b>耳機本體 ×2</b>
+              <ul>
+                <li>PCBA：藍牙 SoC、快閃記憶體、PMIC、被動元件、麥克風、天線</li>
+                <li>喇叭單體、小型鋰電池</li>
+                <li>機構件：外殼、耳塞套、防塵網、表面處理</li>
+              </ul></li>
+            <li><b>充電盒</b>
+              <ul>
+                <li>PCBA（充電管理 IC、USB-C 連接器）、電池</li>
+                <li>機構件：盒體、鉸鏈、磁鐵、LED 導光</li>
+              </ul></li>
+            <li><b>包材與配件</b>：彩盒、充電線、說明書、保固卡、標籤</li>
+          </ul></li>
+      </ul>
+    </div>
+    <div class="tree" data-seg-only="server">
+      <h4>BOM 長什麼樣：2U 雙路伺服器（示意）</h4>
+      <ul>
+        <li><b>成品：2U 伺服器（某一配置）</b>
+          <ul>
+            <li><b>主機板</b>：CPU 插槽、DIMM 插槽、PCIe 插槽、BMC 晶片、PCB、電源 IC</li>
+            <li><b>運算</b>：CPU ×2（含散熱模組）、選配 GPU／加速卡</li>
+            <li><b>記憶體</b>：DIMM ×N</li>
+            <li><b>儲存</b>：前置 SSD／NVMe、背板（backplane）、RAID／HBA 卡</li>
+            <li><b>網路與擴充</b>：網卡（NIC）、PCIe 擴充卡（riser）</li>
+            <li><b>電源與散熱</b>：PSU ×2（1+1 備援）、風扇模組、導風罩</li>
+            <li><b>機殼與機構</b>：機殼、滑軌（rail）、前面板</li>
+            <li><b>線材與包材</b>：電源線、排線、包材、標籤</li>
+          </ul></li>
+      </ul>
+      <p style="font-size:13.5px;color:var(--muted);margin:8px 0 0">伺服器常依客戶配置（CTO／BTO）變動，同一款機型可能有數十種 BOM。</p>
+    </div>
+  </div>
+
+  <h3>成本由哪些項目組成</h3>
+  <div class="tbl"><table>
+    <thead><tr><th>成本項目</th><th>是什麼</th><th>PM 要留意</th></tr></thead>
+    <tbody>
+      <tr><th>材料（BOM）</th><td>所有零組件的採購成本</td><td>通常最大宗；受價格波動、匯率、MOQ、良率耗損影響</td></tr>
+      <tr><th>加工與組裝</th><td>SMT、組裝、人工與製造費用</td><td>與良率、UPH、自動化程度、產地有關</td></tr>
+      <tr><th>測試</th><td>功能測試、burn-in、可靠度抽測</td><td>伺服器 burn-in 時間長，會占用產能、墊高成本</td></tr>
+      <tr><th>包裝與配件</th><td>彩盒、配件、運輸包材</td><td>容易被忽略但數字可觀，尤其含充電器、線材時</td></tr>
+      <tr><th>物流與關稅</th><td>運費、保險、關稅、倉儲</td><td>取決於貿易條件（Incoterms）與銷售地區，關稅政策會直接影響成本</td></tr>
+      <tr><th>NRE 攤提</th><td>模具、治具、認證、開發費等一次性投入</td><td>除以預估銷量攤到每台；銷量不如預期時，單台成本會上升</td></tr>
+      <tr><th>保固與 RMA 準備</th><td>預留維修、退換貨的成本</td><td>依歷史失效率與保固年限估算；伺服器含現場服務時更重要</td></tr>
+      <tr><th>品牌端另有營業費用</th><td>行銷、通路、管銷、研發費用</td><td>屬於 OPEX，不算在 COGS，但會影響淨利。別把毛利與淨利混為一談</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="stackrow" data-seg-only="consumer">
+    <b>消費性電子的成本結構（示意）</b>
+    <div class="stk" role="img" aria-label="消費性電子成本結構示意：材料約七成">
+      <i class="s1" style="width:74%"></i><i class="s2" style="width:8%"></i><i class="s3" style="width:3%"></i><i class="s4" style="width:4%"></i><i class="s5" style="width:8%"></i><i class="s6" style="width:3%"></i>
+    </div>
+  </div>
+  <div class="stackrow" data-seg-only="server">
+    <b>伺服器的成本結構（示意）</b>
+    <div class="stk" role="img" aria-label="伺服器成本結構示意：材料約九成">
+      <i class="s1" style="width:88%"></i><i class="s2" style="width:3%"></i><i class="s3" style="width:1%"></i><i class="s4" style="width:2%"></i><i class="s5" style="width:3%"></i><i class="s6" style="width:3%"></i>
+    </div>
+  </div>
+  <div class="legend">
+    <span style="--c:var(--s1)">材料</span><span style="--c:var(--s2)">加工與測試</span><span style="--c:var(--s3)">包裝</span><span style="--c:var(--s4)">物流關稅</span><span style="--c:var(--s5)">NRE 攤提</span><span style="--c:var(--s6)">保固準備</span>
+  </div>
+  <p class="sub">上面兩條只是示意結構，不是實際數據：重點是「材料通常是最大宗，伺服器又比消費性電子更集中在高價零件」。實際比例依產品、配置、銷量而異。</p>
+
+  <h3>從成本到售價：價格階梯</h3>
+  <ul class="steps">
+    <li><b>材料成本</b>BOM 加總</li>
+    <li><b>＋其他成本＝COGS</b>加工、測試、包裝、物流、NRE 攤提、保固</li>
+    <li><b>÷（1－品牌毛利率）</b>＝出貨價（品牌賣給通路）</li>
+    <li><b>÷（1－通路毛利率）</b>＝零售價（未稅）</li>
+    <li><b>×（1＋營業稅）</b>＝含稅售價（台灣 5%）</li>
+  </ul>
+  <div class="note"><p><b>毛利率不等於加成率。</b>毛利率 =（售價－成本）÷ 售價；加成率 =（售價－成本）÷ 成本。成本 70、售價 100 時，毛利率是 30%，但加成率約 42.9%。倒推價格時用錯，整張報價都會錯。</p></div>
+
+  <h3>成本試算器：自己動手算一次</h3>
+  <p class="sub">數字都是範例，單位任選（元、美元皆可），保持一致就好。改變任一欄位，右邊會即時更新，下方的情境表會告訴你「如果成本變了，毛利會掉多少」。</p>
+  <div class="calc">
+    <div class="calc-in">
+      <label>材料成本（BOM 加總）<input id="c-mat" type="number" inputmode="decimal" value="200" min="0"></label>
+      <label>加工、組裝與測試／台<input id="c-asm" type="number" inputmode="decimal" value="12" min="0"></label>
+      <label>包裝與配件／台<input id="c-pack" type="number" inputmode="decimal" value="6" min="0"></label>
+      <label>物流與關稅（材料的 %）<input id="c-log" type="number" inputmode="decimal" value="4" min="0"></label>
+      <label>NRE 總額（模具、治具、認證、開發）<input id="c-nre" type="number" inputmode="decimal" value="3000000" min="0"></label>
+      <label>預估生命週期銷量（台）<input id="c-qty" type="number" inputmode="decimal" value="100000" min="1"></label>
+      <label>保固與 RMA 準備（材料的 %）<input id="c-war" type="number" inputmode="decimal" value="2" min="0"></label>
+      <label>品牌目標毛利率（%）<input id="c-gm" type="number" inputmode="decimal" value="30" min="0" max="95"></label>
+      <label>通路毛利率（%）<input id="c-ch" type="number" inputmode="decimal" value="20" min="0" max="95"></label>
+    </div>
+    <div class="calc-out">
+      <div class="big">
+        <div><small>單台成本（COGS）</small><b id="o-cogs">-</b></div>
+        <div class="hl"><small>出貨價（品牌→通路）</small><b id="o-ship">-</b></div>
+        <div><small>零售價（未稅）</small><b id="o-retail">-</b></div>
+        <div><small>含稅售價（5%）</small><b id="o-tax">-</b></div>
+      </div>
+      <div class="stk" id="o-stk" role="img" aria-label="成本組成"></div>
+      <div class="legend" id="o-leg"></div>
+      <table>
+        <thead><tr><th>如果發生…（售價不變）</th><th>COGS</th><th>毛利率</th></tr></thead>
+        <tbody id="o-sens"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <h3>常用的降成本手法</h3>
+  <div class="grid">
+    <div class="box lined"><b>規格再檢視</b><p>這個規格客戶真的需要嗎？是否過規？先砍掉不創造價值的成本。</p></div>
+    <div class="box lined"><b>替代料與第二供應來源</b><p>引入 2nd source 增加議價籌碼與供貨韌性；注意要重新驗證與認證。</p></div>
+    <div class="box lined"><b>議價與長約（LTA）</b><p>以量換價、鎖定價格；要權衡 MOQ 與庫存風險。</p></div>
+    <div class="box lined"><b>設計簡化（VA／VE）</b><p>減少零件數、共用料號、簡化結構，同時降低材料與組裝成本。</p></div>
+    <div class="box lined"><b>良率與製程改善</b><p>良率提升 1 個百分點，就是直接把報廢成本省下來。</p></div>
+    <div class="box lined"><b>包裝與物流最佳化</b><p>縮小包裝體積、改變出貨方式與批量，常有意外收穫。</p></div>
+  </div>
+
+  <h3>新手常踩的成本陷阱</h3>
+  <div class="note warn">
+    <ul>
+      <li>只看零件單價，忽略 NRE 攤提依賴的銷量假設；銷量減半，單台成本就多一截。</li>
+      <li>MOQ 與最小包裝量（MPQ）造成的庫存與呆料沒有算進去。</li>
+      <li>記憶體與儲存（DRAM、NAND）價格有週期性波動，報價有效期很短。</li>
+      <li>匯率與關稅沒有做情境分析，毛利被外部因素吃掉。</li>
+      <li>良率耗損與報廢成本沒有計入 BOM 成本。</li>
+      <li>單一來源供應商，一旦缺料或漲價完全沒有談判空間。</li>
+    </ul>
+  </div>
+  <div class="note ok">
+    <p><b>品牌端與代工端怎麼看成本？</b>品牌端是「目標成本法」：售價與毛利先定，再倒推 BOM 能花多少。代工端是「報價」：把材料、加工、測試、包裝、NRE、風險與利潤逐項拆解，常以 Open Book（逐項公開）或 Black Box（只給總價）的方式與客戶往來。兩邊用的是同一份成本邏輯，只是方向相反。</p>
+  </div>
+</section>
+
+<!-- =============== WORK =============== -->
+<section class="sec" id="work" data-title="PM 的工作">
+  <h2>產品經理的工作</h2>
+  <p class="desc">具體來說，PM 每天、每週、每個階段在做什麼，與哪些人合作，又產出哪些東西。</p>
+
+  <h3>三種常見角色的分工</h3>
+  <div class="tbl"><table>
+    <thead><tr><th></th><th>產品經理（PdM）</th><th>專案／計畫經理（PjM／PgM）</th><th>品牌營運</th></tr></thead>
+    <tbody>
+      <tr><th>核心問題</th><td>做什麼？為誰做？值不值得做？</td><td>怎麼做？何時完成？資源夠不夠？</td><td>怎麼賣？備多少貨？通路怎麼管？</td></tr>
+      <tr><th>主要產出</th><td>PRD、roadmap、定價、business case</td><td>主時程、build plan、風險表、gate review 簡報</td><td>銷售預測、備貨計畫、通路價與促銷、庫存報表</td></tr>
+      <tr><th>成功指標</th><td>營收、毛利、市占、客戶價值</td><td>準時、預算、品質、範圍</td><td>sell-through、庫存週轉、缺貨率、通路滿意度</td></tr>
+      <tr><th>溝通對象</th><td>管理層、行銷、研發、業務</td><td>研發、供應鏈、製造、客戶</td><td>業務、通路、物流、財務、客服</td></tr>
+    </tbody>
+  </table></div>
+  <p class="sub">在小公司或某些團隊，一個人會身兼多種角色；在大公司則分得很細。你的專案管理背景，最直接對應中間那一欄。</p>
+
+  <h3>各階段，PM 實際要做的事（總覽）</h3>
+  <div class="tbl"><table>
+    <thead><tr><th>階段</th><th data-role-only="brand">品牌端 PM</th><th data-role-only="odm">代工端 PM</th></tr></thead>
+    <tbody>
+      <tr><th>概念規劃</th><td data-role-only="brand">定義 PRD、目標成本與售價；評估可行性；取得立項</td><td data-role-only="odm">解讀客戶 RFQ、組織可行性評估、準備報價與爭取專案</td></tr>
+      <tr><th>EVT</th><td data-role-only="brand">管理規格凍結；比對規格與實測；追蹤成本差距</td><td data-role-only="odm">管理 build plan 與樣機料件；追蹤 issue；回報客戶</td></tr>
+      <tr><th>DVT</th><td data-role-only="brand">掌握認證時程；鎖定 BOM；準備上市計畫與預測</td><td data-role-only="odm">驅動測試與 bug 結案；治具與模具進度；最終報價鎖定</td></tr>
+      <tr><th>PVT</th><td data-role-only="brand">簽核量產放行；備貨與通路上架；上市活動協調</td><td data-role-only="odm">管理試產與良率改善；確認產能與物料；取得客戶放行</td></tr>
+      <tr><th>量產上市</th><td data-role-only="brand">追蹤銷售、毛利、庫存；管理 RMA；規劃衍生機與下一代</td><td data-role-only="odm">準時交付；cost-down 提案；EOL 與 LTB 管理；下一代專案</td></tr>
+    </tbody>
+  </table></div>
+  <p class="sub">更完整的階段內容，請回到上方「開發流程」點選各階段。</p>
+
+  <h3>跨部門地圖：你要和誰合作</h3>
+  <p class="sub">PM 通常沒有直屬下屬，卻要驅動這些人往同一個日期前進。下表整理每個部門負責什麼、你要向他們要什麼。</p>
+  <div class="tbl"><table id="stake"></table></div>
+
+  <h3>PM 的工作節奏</h3>
+  <div class="tbl"><table>
+    <thead><tr><th>頻率</th><th>會議或活動</th><th>目的與 PM 的角色</th></tr></thead>
+    <tbody>
+      <tr><th>每日（試產期間）</th><td>Build 現場追蹤與站會</td><td>確認當日良率、阻塞問題與物料，快速決策，避免產線停線</td></tr>
+      <tr><th rowspan="3">每週</th><td>專案週會（跨部門）</td><td>同步進度、風險、決策事項；主持並記錄 action items</td></tr>
+      <tr><td>缺料會議（shortage review）</td><td>對照 build plan 與料況，決定替代、加急或調整排程</td></tr>
+      <tr><td>Bug／Issue review；客戶週會（代工端）</td><td>問題分級與 owner、結案率；對齊客戶期待並管理變更</td></tr>
+      <tr><th>每兩週～每月</th><td>成本 review、管理層報告</td><td>檢視目標成本與現況的差距，提出對策與決策需求</td></tr>
+      <tr><th>每個階段</th><td>Gate review、lessons learned</td><td>檢核出關條件，做 Go／Conditional Go／Hold 的決策，並記錄經驗教訓</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>PM 常做的產出物</h3>
+  <div class="grid">
+    <div class="box"><b>PRD／規格書</b><p>定義要做什麼、規格與優先序（Must／Should／Could）。</p></div>
+    <div class="box"><b>主時程（Master Schedule）</b><p>EVT/DVT/PVT/MP 里程碑、Gate、相依性與關鍵路徑。</p></div>
+    <div class="box"><b>BOM 與成本表</b><p>目標成本 vs 目前成本，追蹤 cost gap。</p></div>
+    <div class="box"><b>Build Plan</b><p>每次試產的數量、版本、料件、地點與日期。</p></div>
+    <div class="box"><b>風險登錄表（RAID Log）</b><p>風險、機率、影響、對策、owner、期限。</p></div>
+    <div class="box"><b>Issue／Bug 清單</b><p>設計與測試問題、嚴重度、owner、狀態與結案日。</p></div>
+    <div class="box"><b>Gate Review 簡報</b><p>出關條件達成情形、風險、需要的決策。</p></div>
+    <div class="box"><b>狀態週報</b><p>紅黃綠燈、本週完成、下週計畫、需要協助的事項。</p></div>
+    <div class="box" data-role-only="brand"><b>定價與銷售預測表</b><p>定價、通路價、銷量預測、毛利與情境。</p></div>
+    <div class="box" data-role-only="brand"><b>上市檢核表／GTM 計畫</b><p>價格、通路、活動、素材、客服、備貨的 readiness。</p></div>
+    <div class="box" data-role-only="odm"><b>報價包（Quotation）</b><p>成本拆解、NRE、時程假設、風險與有效期限。</p></div>
+    <div class="box"><b>Lessons Learned</b><p>結案檢討：做對什麼、做錯什麼、下個專案怎麼改。</p></div>
+  </div>
+</section>
+
+<!-- =============== SKILLS =============== -->
+<section class="sec" id="skills" data-title="技能與工具">
+  <h2>技能與工具</h2>
+  <p class="desc">下面把需要的能力拆成十二個領域。每個領域都列出「為什麼重要、具體怎麼做、用什麼工具、背後的理論、怎麼開始練」。標籤會依你選擇的角色切換優先度。</p>
+  <div id="skillList"></div>
+
+  <h3>工具分類速覽</h3>
+  <p class="sub">你不需要精通每一種系統。重點是「會讀、會查、會用它做決策」。</p>
+  <div class="tbl"><table>
+    <thead><tr><th>類別</th><th>用來做什麼</th><th>常見工具</th><th>你需要到什麼程度</th></tr></thead>
+    <tbody>
+      <tr><th>PLM</th><td>管理 BOM、圖面、版本與設計變更（ECN）</td><td>PTC Windchill、Siemens Teamcenter、Arena、Oracle Agile</td><td>看懂 BOM 結構、查版本與變更紀錄、送簽核；不需要會設定系統</td></tr>
+      <tr><th>ERP／MRP</th><td>採購、庫存、生產、成本</td><td>SAP、Oracle、鼎新</td><td>能查料況、庫存、訂單狀態，並看懂報表</td></tr>
+      <tr><th>MES</th><td>產線即時生產與良率資料</td><td>各廠自建或商用 MES</td><td>能看良率、站別不良分布</td></tr>
+      <tr><th>專案管理</th><td>時程、任務、相依性、風險</td><td>MS Project、Excel、Smartsheet、Jira、Asana</td><td>精通，這是你的強項</td></tr>
+      <tr><th>試算與分析</th><td>成本模型、缺料表、良率與銷售分析</td><td>Excel、Power BI、Tableau、SQL</td><td>Excel 進階（樞紐、XLOOKUP、情境分析）必備；Power BI 加分</td></tr>
+      <tr><th>問題追蹤</th><td>Bug、Issue、變更需求</td><td>Jira、Excel、公司內部系統</td><td>會開單、分級、追蹤到結案</td></tr>
+      <tr><th>協作與文件</th><td>溝通與知識管理</td><td>Teams、Slack、LINE、Confluence、Notion、SharePoint</td><td>日常使用</td></tr>
+      <tr><th>簡報與製圖</th><td>Gate review、報告、流程圖</td><td>PowerPoint、Visio、draw.io</td><td>能做出「一頁看懂」的簡報</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<!-- =============== THEORY =============== -->
+<section class="sec" id="theory" data-title="基礎知識與理論">
+  <h2>基礎知識與理論</h2>
+  <p class="desc">這些理論和概念，是整個產業的共同語言。知道它們，你看流程、成本、品質與市場的方式就會不一樣。</p>
+  <div class="theory" id="theoryList"></div>
+
+  <h3>硬體基礎知識速成清單</h3>
+  <p class="sub">不用精通，但要能在會議中聽懂、問對問題。</p>
+  <dl class="topics" data-seg-only="consumer">
+    <dt>運算與儲存</dt><dd>SoC／處理器、LPDDR 記憶體、eMMC／UFS／NVMe 儲存</dd>
+    <dt>顯示與輸入</dt><dd>LCD／OLED／Mini-LED、觸控、鍵盤與按鍵</dd>
+    <dt>電源</dt><dd>鋰電池與保護電路、快充（USB PD）、電源管理 IC</dd>
+    <dt>無線</dt><dd>Wi-Fi、藍牙、蜂巢網路；天線設計與干擾</dd>
+    <dt>感測與影音</dt><dd>鏡頭模組、麥克風、喇叭、感測器</dd>
+    <dt>機構與散熱</dt><dd>塑膠射出、金屬 CNC、公差、熱管與均熱板</dd>
+    <dt>韌體與軟體</dt><dd>韌體、驅動程式、作業系統、OTA 更新</dd>
+  </dl>
+  <dl class="topics" data-seg-only="server">
+    <dt>運算</dt><dd>CPU、GPU／AI 加速卡、插槽（socket）與平台世代</dd>
+    <dt>記憶體與儲存</dt><dd>DDR5 RDIMM、NVMe／SATA／SAS、RAID</dd>
+    <dt>互連與網路</dt><dd>PCIe、網卡（NIC）、InfiniBand／Ethernet</dd>
+    <dt>管理</dt><dd>BIOS／UEFI、BMC、IPMI／Redfish</dd>
+    <dt>電源與散熱</dt><dd>PSU 備援（1+1）、風扇、液冷、TDP、PUE</dd>
+    <dt>外形與整合</dt><dd>1U／2U、機櫃（rack）、OCP、機櫃級整合</dd>
+    <dt>可靠度與相容</dt><dd>RAS、burn-in、硬體相容性清單（HCL）</dd>
+  </dl>
+</section>
+
+<!-- =============== PLAN =============== -->
+<section class="sec" id="plan" data-title="學習時程">
+  <h2>學習時程</h2>
+  <p class="desc">以「有專案管理背景、沒有工程背景」為前提設計。每個月都有目標、任務與一份可以放進作品集的產出。勾選任務，進度會存在你的瀏覽器裡。</p>
+
+  <div class="seg2" role="group" aria-label="選擇時程">
+    <button id="m3" aria-pressed="false">3 個月衝刺版</button>
+    <button id="m6" aria-pressed="true">6 個月完整版</button>
+  </div>
+  <div class="prog"><span id="roadPct">0%</span><div class="barbg"><div class="barfg" id="roadBar"></div></div><span id="roadCnt"></span></div>
+  <ol class="road" id="road"></ol>
+
+  <h3>把你的專案管理經驗，翻譯成硬體語言</h3>
+  <div class="tbl"><table>
+    <thead><tr><th>你在履歷上常寫的</th><th>硬體產業的說法</th><th>可以怎麼量化</th></tr></thead>
+    <tbody>
+      <tr><td>管理專案時程與里程碑</td><td>主時程、關鍵路徑、Gate 與 build 計畫</td><td>準時達成率、縮短天數</td></tr>
+      <tr><td>風險管理</td><td>風險登錄表、缺料預警、替代方案</td><td>提前發現並化解的風險數</td></tr>
+      <tr><td>預算與成本控制</td><td>目標成本、BOM 成本、cost-down</td><td>節省金額、預算偏差</td></tr>
+      <tr><td>協調跨部門與供應商</td><td>驅動研發、供應鏈、製造、品保與客戶</td><td>協作部門數、涉及人數、供應商數</td></tr>
+      <tr><td>需求變更管理</td><td>ECN／變更控制：評估對成本、時程、品質的衝擊</td><td>變更處理件數、衝擊控制成果</td></tr>
+      <tr><td>向高層報告</td><td>Gate review、管理層狀態報告</td><td>決策被採納的案例</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>可能的切入路徑</h3>
+  <div class="grid">
+    <div class="box lined"><b>路徑 A：代工端 NPI／專案管理</b><p>以專案管理能力切入，快速累積 EVT/DVT/PVT 的實戰經驗。優點是職缺多、學得快；缺點是客戶導向、技術名詞多。累積後可轉品牌端或往 Program Manager 發展。</p></div>
+    <div class="box lined"><b>路徑 B：品牌端的產品專員／營運專員</b><p>從產品管理專員、產品企劃助理、品牌或通路營運做起，熟悉產品、價格、通路與銷售數據。適合想往產品經理或品牌管理走的人，但入門職位相對少、競爭也較高。</p></div>
+    <div class="box lined"><b>路徑 C：相鄰職能再轉 PM</b><p>先從供應鏈、採購、業務助理或客戶專案窗口進入，累積成本、供應商與客戶的實戰認識，再轉向 PM。路徑較長，但基礎紮實。</p></div>
+  </div>
+  <div class="note"><p>以上是常見路徑，不是保證。建議用「職缺內容」和「你已有的經驗」交叉比對，同時投遞不同路徑，讓市場回饋告訴你哪條走得通。</p></div>
+</section>
+
+<!-- =============== INTERVIEW =============== -->
+<section class="sec" id="interview" data-title="面試題庫">
+  <h2>面試題庫</h2>
+  <p class="desc">每題都附上「面試官想看什麼」與「回答框架」。重點不是背答案，而是練習用硬體的邏輯思考，並用自己的專案經驗舉例。</p>
+  <div class="filters" id="qaChips" role="group" aria-label="題型篩選"></div>
+  <div id="qa" class="qa"></div>
+</section>
+
+<!-- =============== GLOSSARY =============== -->
+<section class="sec" id="glossary" data-title="名詞速查">
+  <h2>名詞與縮寫速查</h2>
+  <p class="desc">硬體業的縮寫特別多。搜尋英文縮寫、中文或關鍵字都可以。</p>
+  <input id="glq" class="search" type="search" placeholder="搜尋，例如：BOM、良率、認證…" aria-label="搜尋名詞">
+  <div class="filters" id="glChips" role="group" aria-label="分類篩選"></div>
+  <p class="count" id="glCount"></p>
+  <div class="gl" id="gl"></div>
+</section>
+
+</main>
+</div>
+
+<footer>
+  <p><b>使用說明與限制：</b>本頁內容用於建立產業的整體認識。各公司對階段命名、樣機數量、時程、關卡、職稱與工具的實際做法都不同；文中的數量、比例與時間皆為常見範圍或示意，不代表任何特定公司。面試與到職後，請以該公司的定義為準。</p>
+  <p>最後更新：2026 年 10 月。</p>
+</footer>
+<script>
+/* ================= DATA A ================= */
+const STAGES = [
+{
+  key:"concept", acr:"概念", name:"概念與規劃（Concept & Planning）",
+  q:"值得做嗎？要做什麼、給誰、賺不賺錢？",
+  dur:"常見約 1～3 個月；伺服器常需配合平台路線與客戶規格，可能更久",
+  state:[["設計狀態","概念、規格草案、方案評估"],["樣機形式","通常沒有實體樣機；可能用晶片商開發板或參考設計（reference design）驗證"],["模具與治具","尚未開始"],["常見數量","0 或少量開發板"],["產線","尚未進入"]],
+  activities:["市場與競品分析、客戶訪談、使用情境","撰寫 MRD／PRD：目標客群、核心賣點、規格草案與優先序","技術可行性評估：晶片或平台選型、關鍵技術風險","目標成本、目標售價與毛利試算（business case）","初版時程、資源與預算；盤點供應商與認證需求","風險盤點，召開 Kick-off／立項審查"],
+  exit:["Business case 與目標成本、毛利被核准","規格草案（含優先序）獲相關部門認可","平台與關鍵零件、供應商方向確定","專案團隊、預算、初版主時程到位"],
+  consumer:["先決定「賣給誰、賣多少錢」：價格帶決定規格與成本上限","鎖定上市檔期（年底購物季、開學季、發表會），反推整個時程","外觀設計（ID）與 CMF 影響機構成本與模具複雜度","晶片平台與關鍵零件（面板、電池）的供貨與價格先評估"],
+  server:["對齊 CPU／GPU 平台 roadmap 與世代時程，常是整個時程的決定因素","以客戶工作負載（AI、雲端、儲存、邊緣）定義配置、功耗與散熱","評估能否重用既有平台（衍生機種）以縮短時程、降低 NRE","大客戶常提供規格或 RFP，專案由客戶需求主導"],
+  brand:["撰寫 PRD 與 business case，定義目標成本、售價與毛利","做市場與競品分析，決定定位與規格優先序","與研發、供應鏈做可行性與成本初估，取得立項","規劃 roadmap 與上市時程"],
+  odm:["解讀客戶規格或 RFQ，組織跨部門可行性評估","準備報價（材料、加工、NRE、時程假設與風險）","爭取 design win，確認範圍與條件","建立專案團隊、主時程與溝通機制"],
+  outputs:["MRD／PRD","Business case","目標成本表","初版主時程","風險清單","報價包（代工端）"],
+  risks:[["規格模糊或過度承諾","用 PRD 明確定義 Must／Should／Could，並取得相關部門簽核"],["目標成本與規格不匹配","早期做 should-cost，必要時調整規格或售價"],["關鍵零件或平台供貨不確定","提早與供應商確認供貨與長交期料"],["時程過於樂觀","以歷史專案與關鍵路徑校準，預留緩衝"]]
+},
+{
+  key:"evt", acr:"EVT", name:"工程驗證測試（Engineering Validation Test）",
+  q:"它做得出來嗎？核心功能能不能運作？",
+  dur:"常見約 2～4 個月，視改版次數而定",
+  state:[["設計狀態","原型設計，PCB 與結構常改版"],["樣機形式","手工打樣或試作線製作的工程樣機"],["模具與治具","軟模、CNC、3D 列印；簡易治具"],["常見數量","數十台（概略）"],["產線","實驗室或試作線手工組裝"]],
+  activities:["硬體 bring-up：上電、基本功能點亮","韌體／BIOS 初版與基本驅動","關鍵零件選定與替代方案評估","功能與效能驗證；初步散熱、無線（RF）、電源驗證","結構干涉檢查與機構可行性","更新 BOM 與成本；列出規格與實測的差距（gap list）"],
+  exit:["核心功能達到規格，重大技術風險有解法或緩解方案","規格凍結（或接近凍結），重大規格變更已處理","更新後的 BOM、成本與時程獲確認","DVT 投入（含模具費用）的 Go／No-Go 決策完成"],
+  consumer:["外觀與結構可行性：厚度、散熱、天線空間","電池續航初測與無線效能（Wi-Fi／藍牙／蜂巢）","使用體驗原型與基本人因","外觀樣品（CMF）初步確認"],
+  server:["平台 bring-up：CPU、記憶體、PCIe 裝置能否辨識與開機","BIOS／BMC 韌體初版","主機板佈線與訊號完整性（SI）初步驗證","散熱、風扇與電源（PSU）相容初測"],
+  brand:["管控規格凍結，比對規格與實測的 gap","更新成本，與目標成本比較並決定取捨","準備 DVT 的投資與審批（模具費用）","持續與研發、行銷對齊賣點是否仍成立"],
+  odm:["管控 build plan：樣機數量、料件到位、板子版本","追蹤 bug／issue list 與結案率","與客戶週會回報，管理規格變更與其對報價、時程的影響","管理供應商樣品與交期"],
+  outputs:["Build plan","Gap list","Issue／Bug 清單","更新後 BOM 與成本","EVT 報告","風險登錄表"],
+  risks:[["關鍵料缺或交期長，樣機做不出來","提早下單長交期料；備援方案與替代料同步評估"],["PCB 改版次數過多，拖慢時程","嚴格控管每版目標與變更；改版前先彙整問題一次處理"],["硬體或韌體 bug 太多","設定問題分級與 owner，每週追蹤收斂趨勢"],["規格持續變更（scope creep）","設定規格凍結點，變更走正式流程並評估衝擊"],["效能或散熱達不到目標","儘早做熱模擬與實測，評估規格調整或結構修改"]]
+},
+{
+  key:"dvt", acr:"DVT", name:"設計驗證測試（Design Validation Test）",
+  q:"它符合所有規格嗎？設計能不能定版？",
+  dur:"常見約 2～4 個月，含認證與模具修改",
+  state:[["設計狀態","接近定版，只修重大問題"],["樣機形式","量產級設計與材料的驗證樣機"],["模具與治具","硬模試模（T1、T2…）；開發測試治具與測試程式"],["常見數量","數百台（概略）"],["產線","試產線或半量產線"]],
+  activities:["全項可靠度測試：高低溫、溫濕度、跌落、振動、ESD、按鍵壽命、防水防塵等","法規與安規認證（如 NCC、BSMI、FCC、CE、UL）送測與整改","相容性測試：作業系統、驅動、周邊","可製造性審查：DFM／DFA／DFT","治具、測試程式與初版 SOP；供應商樣品認可、建立 AVL","包裝設計與運輸測試；設計變更（ECN）管理收斂"],
+  exit:["設計凍結：除重大問題外不再變更設計","可靠度與認證通過，或有明確的結案計畫","良率與製程能力初步合格","BOM 凍結，供應商與產能 readiness 計畫就緒","PVT 投入的 Go／No-Go 決策完成"],
+  consumer:["外觀品質（顏色、材質、表面處理）與開箱體驗","跌落、按鍵壽命、日常使用耐久","電池安全與運輸認證（如 UN 38.3 等）","無線 RF 認證與 SAR（視產品而定）"],
+  server:["長時間穩定性：burn-in 與 24x7 壓力測試","相容性：作業系統、虛擬化、周邊卡、硬體相容性清單（HCL）","熱模擬與風流驗證；功耗與效能 benchmark","BIOS／BMC 韌體穩定度；安規與 EMC 認證；機櫃與滑軌相容"],
+  brand:["掌握認證時程（直接影響上市日）","鎖定 BOM 與成本，確認毛利","準備上市計畫：價格、通路、預購與銷售預測","管控設計變更（ECN）與 PVT 數量規劃"],
+  odm:["驅動 DVT 測試排程與 bug 結案率","追蹤模具、治具與測試程式進度","配合或主導認證送測","確認供應商、產能、人力 readiness；鎖定最終報價；ECN 衝擊評估"],
+  outputs:["DVT 測試報告","認證時程表","ECN 清單","治具與模具進度表","良率報告","Gate review 簡報"],
+  risks:[["可靠度測試失敗，需要改模","提早做預測試；模具修改前評估影響範圍與時程"],["認證沒過（RF、EMC 等）","儘早做 pre-compliance；預留重測緩衝與實驗室檔期"],["後期 ECN 不斷湧入","設定凍結規則，每筆變更評估成本、時程、品質後才核准"],["良率偏低","Pareto 找前幾大不良，與製造、研發、供應商展開 8D"],["供應商品質不穩","提升來料檢驗，要求改善報告，評估第二供應來源"]]
+},
+{
+  key:"pvt", acr:"PVT", name:"生產驗證測試（Production Validation Test）",
+  q:"量產線能穩定做出合格的產品嗎？",
+  dur:"常見約 1～2 個月（含爬坡準備）",
+  state:[["設計狀態","凍結，變更需嚴格核准"],["樣機形式","由量產線產出，貼近出貨品質"],["模具與治具","量產模具、量產治具、測試站"],["常見數量","數百至數千台（概略）"],["產線","量產線、量產人員、量產 SOP"]],
+  activities:["量產製程驗證：SMT、組裝、測試、包裝","良率（FPY）、節拍（UPH）、產能驗證；製程能力（Cpk）","物料準備（MRP）與供應鏈量產備料、爬坡計畫","包裝與運輸驗證；出貨品質標準（OQC）","SOP 定版與人員訓練；確認標準樣品（golden sample）","客訴與 RMA 流程 ready"],
+  exit:["良率與產能達到目標","品質指標（如 DPPM）符合要求","量產物料到位，爬坡計畫可行","所有 open issue 結案或有核准的 waiver","品牌或客戶簽核量產放行（MP Release）"],
+  consumer:["產線節拍（UPH）與組裝良率","配件齊備（充電器、線材）與包裝","多 SKU、多地區版本（語言、插頭、認證標籤）","上市前備貨與出貨節奏"],
+  server:["多配置（CTO／BTO）整機組裝與測試流程","burn-in 時間對產能的影響","機櫃級整合與出貨前整體測試","客戶專屬韌體與映像檔（image）；GPU／CPU／記憶體配給與長交期料"],
+  brand:["確認量產放行（MP Release）","規劃 sell-in 與初期備貨、出貨計畫","協調通路上架與上市活動","設定上市後監控指標（退貨率、客訴、RMA）"],
+  odm:["管理試產與良率改善（8D）","確保爬坡計畫與產能、物料供應","管理 shortage 與出貨排程","取得客戶放行；整理結案文件與 lessons learned"],
+  outputs:["PVT 報告","良率與產能報告","量產放行文件","Ramp 計畫","Waiver 清單","出貨計畫"],
+  risks:[["良率不達標","Pareto 與 8D：區分設計、製程、物料、人員問題，各 owner 限期改善"],["產能爬坡太慢","找瓶頸站別（TOC），增加治具、人力或調整節拍"],["缺料","與供應商 escalation、評估替代料或 spot buy，優先保障關鍵訂單"],["最後一刻的設計變更","嚴格變更控制，評估成本、庫存、認證衝擊後才核准"],["運輸損壞","儘早做包裝與運輸測試，並檢討包材設計"]]
+},
+{
+  key:"mp", acr:"MP", name:"量產與上市後（Mass Production & Post-launch）",
+  q:"能否穩定出貨、持續獲利？",
+  dur:"持續進行，直到產品停產（EOL）",
+  state:[["設計狀態","凍結，變更走 ECN 流程"],["樣機形式","正式出貨產品"],["模具與治具","量產中，需維護與保養"],["常見數量","依需求持續出貨"],["產線","量產線，持續改善"]],
+  activities:["量產爬坡（ramp）與持續出貨","S&OP：銷售與營運規劃，調整備貨","cost-down 專案：降低 BOM 與製造成本","品質監控：RMA、DPPM、客訴趨勢","韌體與軟體更新","通路庫存與 sell-through 管理；價格與促銷調整","衍生機種、下一代規劃；停產（EOL）與最後採購（LTB）"],
+  exit:["良率與品質趨勢穩定達標","準時交付，庫存水位健康","RMA 與客訴率在預期內","成本達成目標，並有持續 cost-down 計畫"],
+  consumer:["上市後節奏快：促銷檔期與舊機庫存要管好","退貨率與評價是最快的市場回饋","韌體更新與新功能維持產品熱度"],
+  server:["長期支援（常見 3～5 年以上）：零組件 EOL 與替代料管理","BMC／BIOS 安全更新與漏洞修補","客戶現場支援、RMA 與備品管理"],
+  brand:["追蹤銷售、毛利、庫存，調整價格與促銷","分析 RMA 趨勢並回饋給研發","規劃衍生機與下一代 roadmap"],
+  odm:["確保準時交付（OTD）與良率穩定","提出 cost-down 方案並與客戶分享成果","管理 EOL、LTB 與零件 PCN","維護客戶關係，爭取下一代專案"],
+  outputs:["銷售與庫存報表","RMA 分析","cost-down 方案","S&OP 計畫","EOL／LTB 計畫"],
+  risks:[["零件價格波動（如記憶體）","情境分析、長約、與客戶議定價格調整機制"],["需求不如預期造成庫存","滾動預測、調整備貨、促銷與通路庫存管理"],["品質問題導致回收","早期監控 RMA 趨勢，快速分析根因並啟動遏止措施"],["關鍵零件停產（EOL）","關注 PCN，提早 LTB 或導入替代方案"]]
+}
+];
+
+const ROLES = [
+{ttl:"產品經理／產品企劃", en:"Product Manager／Product Planner", side:["brand"], fit:"中高",
+ focus:"定義「做什麼、為什麼做」：市場、規格、定價、roadmap，並推動跨部門把產品送上市。",
+ out:["PRD、roadmap、business case","規格與優先序","定價與毛利分析"],
+ skills:"市場與競品分析、規格定義、成本與毛利、跨部門領導與溝通",
+ gap:"品牌端常期待有產業經驗；沒有工程背景要靠作品集（拆解、PRD、成本模型）證明你能快速理解硬體。",
+ kw:"Product Manager 硬體、Product Planner、產品企劃、產品經理 3C"},
+{ttl:"NPI 專案／計畫經理", en:"NPI Project／Program Manager", side:["brand","odm"], fit:"高",
+ focus:"掌控「怎麼做、何時完成」：主時程、build plan、風險、Gate review，把 EVT/DVT/PVT 推到量產。",
+ out:["主時程與關鍵路徑","Build plan、風險表","Gate review 簡報、週報"],
+ skills:"專案管理、跨部門協調、風險與問題管理、基礎技術與製造知識",
+ gap:"你的專案管理背景最直接可遷移；要補的是硬體流程、供應鏈與製造知識。",
+ kw:"NPI PM、Program Manager、硬體專案經理、Project Manager 電子"},
+{ttl:"客戶專案經理", en:"Customer PM／Account PM", side:["odm"], fit:"中高",
+ focus:"代工端面對客戶的主要窗口：報價、時程、需求、變更與客訴，結合業務與專案管理。",
+ out:["報價包","客戶週報","變更管理紀錄"],
+ skills:"客戶溝通（常需英文）、成本與報價、專案管理、談判",
+ gap:"需要很好的溝通與抗壓；懂成本與報價會是加分。",
+ kw:"Customer PM、Account PM、客戶專案經理、Project Manager (Customer)"},
+{ttl:"產品管理專員／產品管理師", en:"Product Management Specialist", side:["brand","odm"], fit:"高",
+ focus:"偏執行與資料管理：BOM、規格、價格表、SKU、PLM／ERP 資料維護，協助上市文件與跨部門協調。",
+ out:["規格與 SKU 清單","價格表與資料維護","上市文件"],
+ skills:"Excel、資料整理、細心、跨部門協調、基本 BOM 與成本概念",
+ gap:"入門友善，是熟悉產品與系統的好跳板；各公司定義差異大，請看 JD。",
+ kw:"產品管理專員、產品專員、Product Specialist、Product Operations"},
+{ttl:"產品行銷", en:"PMM（Product Marketing Manager）", side:["brand"], fit:"中",
+ focus:"把產品賣點翻譯成市場語言：定位、訊息、上市計畫（GTM）、銷售工具與競品比較。",
+ out:["定位與訊息架構","GTM 計畫","銷售簡報與競品比較"],
+ skills:"市場洞察、文案與簡報、通路與業務協作、數據分析",
+ gap:"偏行銷與溝通，技術深度要求較低，但仍需理解產品差異化。",
+ kw:"Product Marketing、PMM、產品行銷、Marketing Manager 3C"},
+{ttl:"品牌管理", en:"Brand Manager", side:["brand"], fit:"中",
+ focus:"品牌策略與形象：品牌定位、行銷活動、社群與廣告、預算與品牌長期資產。",
+ out:["品牌策略與年度計畫","行銷活動與預算","品牌形象規範"],
+ skills:"品牌與行銷理論、創意與專案管理、預算控制、數據與消費者洞察",
+ gap:"比較偏行銷，與硬體開發距離較遠；若想貼近產品，可選品牌兼產品的混合職位。",
+ kw:"Brand Manager、品牌經理、品牌行銷、Brand Marketing"},
+{ttl:"品牌營運／通路營運", en:"Brand／Channel Operations", side:["brand"], fit:"高",
+ focus:"把產品送到通路並管好庫存：訂單、備貨、sell-in／sell-through、通路價格與促銷、售後協調。",
+ out:["銷售預測與備貨計畫","通路價與促銷計畫","庫存與銷售報表"],
+ skills:"Excel／Power BI、需求預測、供應鏈基礎、通路與物流協調",
+ gap:"偏營運與資料，對無工程背景者門檻較低；是理解「賣出去之後」的好位置。",
+ kw:"品牌營運、通路營運、Channel Operations、Sales Operations、Demand Planner"},
+{ttl:"技術專案經理", en:"TPM（Technical Program Manager）", side:["brand","odm"], fit:"偏低",
+ focus:"較技術導向的專案管理，常見於雲端與伺服器：需理解架構、相容性與驗證，並協調複雜的跨團隊交付。",
+ out:["技術時程與相依性管理","跨團隊風險與議題","技術決策紀錄"],
+ skills:"系統與平台架構、技術溝通、風險分析、專案管理",
+ gap:"技術門檻較高，通常期待工程或系統背景；可以作為中長期目標。",
+ kw:"TPM、Technical Program Manager、Server Program Manager"}
+];
+const FIT_NOTE = "對無工程背景者的友善度";
+
+const STAKE = [
+["硬體研發（EE／HW）","電路設計、PCB、板級驗證","設計進度、bug 狀態、風險、變更對時程的影響","根因是什麼？影響哪些階段？修正方案需要多久？"],
+["機構研發（ME）","外殼、結構、散熱、模具","模具進度（T1、T2）、公差與組裝性、改模成本","改模要多久、多少錢？有沒有不改模的替代做法？"],
+["韌體／軟體（FW／SW／BIOS／BMC）","開機、驅動、功能、更新","版本計畫、已知問題、穩定度","哪些功能一定要在這版完成？風險最高的是哪塊？"],
+["測試與可靠度","驗證計畫與結果","測試排程、通過率、失敗分析","哪些項目還沒測？失敗是設計問題還是樣品問題？"],
+["法規與認證","NCC、BSMI、FCC、CE、UL 等","送測時程、認證狀態、整改需求","哪個市場、什麼時候可以拿到證書？重測要多久？"],
+["採購與供應鏈（含生管／計畫）","報價、交期、缺料、替代料","零件價格與交期、MOQ、缺料報表","長交期料有哪些？有第二供應來源嗎？"],
+["製造與製程（MFG／PE／IE）","產線、治具、良率、產能","良率趨勢、UPH、爬坡計畫","瓶頸在哪一站？需要什麼資源才能達標？"],
+["品保（QA／QC／SQE）","來料與出貨品質、供應商品質","品質數據、客訴、改善報告","DPPM 趨勢？出貨品質標準與放行條件是什麼？"],
+["業務／銷售","客戶需求、預測、價格","客戶回饋、銷量預測、訂單資訊","客戶最在意什麼？需求預測的信心有多高？"],
+["行銷","定位、上市活動、素材（品牌端）","賣點、素材需求與時程","上市前還缺什麼素材或產品資訊？"],
+["財務","成本、定價、預算、損益","成本模型、毛利審核、預算","毛利底線？成本假設怎麼審核？"],
+["客服與售後（RMA）","客訴、退貨、維修、保固","客訴分類、RMA 趨勢、維修流程","最常見的客訴是什麼？能不能回饋給設計？"],
+["法務與智財","授權、專利、合約","授權費用、合約條款、專利風險","第三方授權或專利有沒有風險？"]
+];
+
+const SKILLS = [
+{ttl:"專案與時程管理", p:{brand:"必備",odm:"必備"},
+ why:"硬體開發環環相扣，一個關鍵料或一次改版的延遲，就會推遲整個上市日。你已有的專案管理背景，最能遷移到這裡。",
+ how:["用 WBS 拆解 EVT/DVT/PVT 各階段工作","找出關鍵路徑與相依（模具、認證、料件交期、韌體）","為每個 Gate 定義出關條件","建立 build plan 與主時程，並每週更新","用 RAID log 管理風險、假設、議題與相依性"],
+ tools:["MS Project","Excel／Google Sheets 甘特圖","Smartsheet","Jira","Confluence","Notion"],
+ theory:["Stage-Gate","關鍵路徑法（CPM）","WBS","RACI","風險矩陣","硬體 waterfall＋軟韌體 agile 的混合式"],
+ start:"把一款你熟悉的產品（例如某款耳機）倒推成一份假想的 EVT → MP 主時程。"},
+{ttl:"跨部門溝通與利害關係人管理", p:{brand:"必備",odm:"必備"},
+ why:"PM 通常沒有直屬下屬，卻要驅動研發、供應鏈、製造、業務一起往同一個日期前進。",
+ how:["用對方的語言溝通：對研發談技術風險與取捨，對財務談成本與毛利，對業務談時程與數量","會議前先一對一對齊，會議中只做決策","把問題寫成「現況—影響—選項—建議」四段式","升級（escalation）時帶著資料與選項，而不是只丟問題"],
+ tools:["Teams／Slack／LINE","Email","PowerPoint","Confluence","Miro"],
+ theory:["利害關係人分析（權力／利益矩陣）","衝突管理","無權力的領導（leading without authority）","決策紀錄（decision log）"],
+ start:"練習把一個技術問題，用「現況—影響—選項—建議」寫成一頁。"},
+{ttl:"硬體技術素養", p:{brand:"必備",odm:"必備"},
+ why:"你不需要會設計電路，但必須聽得懂工程師在說什麼、判斷風險輕重、問對問題；否則很容易被「沒問題」或「很難」帶著走。",
+ how:["學會讀產品規格書與方塊圖（block diagram）","了解主要零組件：SoC／CPU、記憶體、儲存、顯示、電池、無線、散熱、機構","理解常見失效模式：過熱、跌落破裂、無線干擾、韌體當機","拆解產品（teardown），看零件如何組成"],
+ tools:["iFixit 拆解文章","零組件 datasheet","晶片商與平台商技術文件","產品 spec sheet"],
+ theory:["電子系統架構（SoC、匯流排、電源樹）","熱設計與 TDP","RF 基礎","材料與製程基礎（射出、CNC、SMT）","伺服器：平台架構與 RAS"],
+ start:"每週拆解一個產品的規格，畫一張 block diagram，並標出前五大成本零件。"},
+{ttl:"成本與財務", p:{brand:"必備",odm:"必備"},
+ why:"硬體的毛利很容易被「幾塊錢」吃掉；PM 要看懂 BOM、算得出毛利，並在規格與成本之間做取捨。",
+ how:["建立 BOM 成本模型：材料、加工、測試、包裝、物流、NRE 攤提、保固","用目標成本法由售價倒推，並追蹤 cost gap","用 Pareto 找出前 20% 的高成本零件","做情境分析：匯率、記憶體漲價、良率下降對毛利的影響","理解報價與議價的邏輯"],
+ tools:["Excel（樞紐、XLOOKUP、情境與敏感度分析）","PLM／ERP 成本模組（如 SAP）","零件市價參考（如 Octopart、Findchips、TrendForce）","報價單成本拆解表"],
+ theory:["目標成本法","Should-cost","損益平衡","毛利率 vs 加成率","TCO（伺服器）","攤提（amortization）"],
+ start:"把本頁的成本試算器換成你熟悉的產品數字，做出三組情境。"},
+{ttl:"供應鏈與物料管理", p:{brand:"重要",odm:"必備"},
+ why:"缺料是硬體專案最常見的殺手。PM 要看得懂料況，才能判斷時程能不能守住。",
+ how:["理解交期（lead time）、MOQ、AVL、2nd source","看懂缺料報表與 build plan 的關係","提早鎖定長交期料（long-lead items）","與採購、計畫共同評估替代料的風險","了解配給（allocation）與 spot buy 的成本"],
+ tools:["ERP（SAP／Oracle／鼎新）","MRP","Excel 缺料表","Power BI","供應商入口網站"],
+ theory:["MRP","S&OP","安全庫存","牛鞭效應","限制理論（TOC）","單一來源風險"],
+ start:"為你的假想產品列出前 10 大長交期零件，並規劃替代方案。"},
+{ttl:"製造與品質", p:{brand:"重要",odm:"必備"},
+ why:"DVT 到 PVT 的成敗，取決於「做得出來、做得好」。不懂製造，就管不好量產。",
+ how:["認識 SMT → 組裝 → 測試 → 包裝流程與各站的不良來源","用 FPY、DPPM、Pareto 看良率","主導或參與 8D、FMEA","參與 DFM／DFA／DFT 審查","去產線實地觀察（go to gemba）"],
+ tools:["MES","SPC 圖表","8D 報告範本","FMEA 範本","Pareto 與魚骨圖","Minitab（進階）"],
+ theory:["Lean 精實","Six Sigma／DMAIC","SPC 與 Cpk","浴缸曲線","AQL 抽樣檢驗","FMEA"],
+ start:"用一份假資料做良率 Pareto，練習講出前三大不良的對策。"},
+{ttl:"法規與認證", p:{brand:"必備",odm:"重要"},
+ why:"認證沒過就不能合法銷售；送測與整改常卡在上市前的最後一哩路。",
+ how:["依銷售地區列出所需認證：NCC、BSMI、FCC、CE、UL、RoHS／REACH 等","把認證排進主時程，並預留重測緩衝","了解無線（RF）、電磁相容（EMC）、安規與電池運輸（UN 38.3）的差異","與實驗室窗口保持聯繫"],
+ tools:["第三方實驗室（如 SGS、UL、TÜV、Intertek）","Excel 認證時程表","各國法規官網"],
+ theory:["EMC／RF／安規概念","環保法規（RoHS／REACH）","型式認證與自我宣告（DoC）"],
+ start:"查你想做的產品在台灣、美國、歐盟各需要哪些認證，做成一張對照表。"},
+{ttl:"產品策略與市場分析", p:{brand:"必備",odm:"重要"},
+ why:"品牌端 PM 的核心：決定做什麼產品、賣給誰、賣多少錢。代工端做 JDM 或平台時也需要。",
+ how:["估算市場規模（TAM／SAM／SOM）與區隔（STP）","競品拆解與規格、價格比較","用 Kano、JTBD 找出關鍵需求","定義 MVP 規格與優先序（MoSCoW、RICE）","規劃 roadmap 與世代銜接"],
+ tools:["Excel／PowerPoint","市調來源（IDC、Counterpoint、Gartner、TrendForce、資策會 MIC）","通路網站價格與評論","Google Trends","roadmap 工具（如 Productboard、Aha!，非必要）"],
+ theory:["STP","4P","Kano 模型","JTBD","產品生命週期","波特五力","SWOT"],
+ start:"挑一個品類，蒐集 5 款競品做規格與價格矩陣，並找出空白市場。"},
+{ttl:"品牌、行銷與通路營運", p:{brand:"必備",odm:"加分"},
+ why:"產品做出來還要賣得掉。品牌管理與營運職位的核心，在於定位、通路、庫存與銷售。",
+ how:["建立品牌定位與訊息架構","設計 GTM 計畫：價格、通路、活動、時程","管理通路：sell-in、sell-through、sell-out","追蹤庫存週轉（DOI／WOI）","規劃促銷與價格保護；協調售後與 RMA","做需求預測與 S&OP"],
+ tools:["Excel／Power BI（銷售與庫存報表）","ERP／CRM","電商後台","廣告後台（Meta、Google）","簡報工具"],
+ theory:["4P","品牌資產","通路衝突","價格彈性","銷售預測方法","庫存週轉"],
+ start:"為你的假想產品寫一頁 GTM 計畫：目標客群、價格、通路、檔期、KPI。"},
+{ttl:"資料分析與報告", p:{brand:"必備",odm:"必備"},
+ why:"所有決策都要靠數據：良率、成本、銷售、缺料。能把數據變成主管一眼看懂的報告，是 PM 的基本功。",
+ how:["用數據支持決策，而不是用感覺","做出一眼能看懂的 dashboard 與單頁報告","用紅黃綠燈與重點前置的方式做週報"],
+ tools:["Excel（進階）","Power BI／Tableau","SQL 基礎","Google Sheets","PowerPoint"],
+ theory:["Pareto 80/20","趨勢分析","敏感度分析","金字塔原理（結論先行）"],
+ start:"用 Excel 做一份含樞紐分析與圖表的缺料或良率追蹤範本。"},
+{ttl:"風險、問題與變更管理", p:{brand:"必備",odm:"必備"},
+ why:"硬體專案幾乎一定會出問題。差別在於，你是提早看見並處理，還是被問題追著跑。",
+ how:["建立風險登錄表（機率 × 影響）","把問題分級（如 S1～S3，各家名稱不同）並追蹤結案","ECN／ECR 流程：先評估對成本、時程、品質、庫存的衝擊再核准","做決策前先列出選項與 trade-off"],
+ tools:["PLM 變更流程（如 PTC Windchill、Siemens Teamcenter、Arena）","Jira","Excel 風險表"],
+ theory:["風險矩陣","FMEA","變更控制（change control）","專案鐵三角（範圍、時間、成本、品質）","決策樹"],
+ start:"針對你的假想專案，列出 DVT 最可能發生的 10 個風險，並為前 3 個擬定對策。"},
+{ttl:"英文與商務文件能力", p:{brand:"重要",odm:"重要"},
+ why:"硬體供應鏈與客戶多為跨國，技術文件、郵件與會議常以英文進行。",
+ how:["能寫清楚的英文 email：問題、影響、需求、期限","能讀懂英文 datasheet、spec 與測試報告","能用英文主持簡短的視訊會議"],
+ tools:["Outlook／Gmail","Teams／Zoom","翻譯與寫作輔助工具"],
+ theory:["商務溝通結構（結論先行）","跨文化溝通"],
+ start:"每週用英文寫一份 5 行的專案狀態更新。"}
+];
+/* ================= DATA B ================= */
+const THEORIES = [
+["Stage-Gate 階段關卡法","把開發切成階段，每個階段結束設一道關卡，由決策者依出關條件決定通過、修正後重審、擱置或終止（Robert G. Cooper 提出）。","EVT/DVT/PVT 與 Gate review 的底層邏輯。"],
+["NPI 新產品導入","從概念到量產的完整管理流程，強調製造、供應鏈、品質提早參與。","代工端 NPI PM 的工作框架。"],
+["平行工程（Concurrent Engineering）","設計、製造、採購、品保同時參與，而不是一棒接一棒，縮短週期並減少後期變更。","解釋為什麼 PM 要在早期就拉製造與供應鏈進來。"],
+["DfX（DFM／DFA／DFT／DFR）","在設計階段就考慮可製造、可組裝、可測試與可靠度。","DVT 的 DFM 審查與降成本。"],
+["目標成本法（Target Costing）","先決定售價與目標毛利，再倒推可接受的成本，並驅動設計取捨。","品牌端定價與成本控制的主軸。"],
+["變更成本曲線","越晚改設計，成本與時程的衝擊越大（本頁圖示僅為示意）。","說服團隊「早期把問題找出來」，以及為何要設規格凍結。"],
+["浴缸曲線（Bathtub Curve）","產品故障率隨時間分三段：早期失效、穩定期、老化期。","理解 burn-in、保固與可靠度測試的設計理由。"],
+["限制理論（TOC）","系統的產出由最慢的環節決定，要先找瓶頸再改善。","找產線瓶頸站別與專案關鍵鏈。"],
+["Lean 與 Six Sigma（DMAIC）","消除浪費、降低變異；DMAIC 是定義、量測、分析、改善、控制的問題解決流程。","良率改善與製程優化。"],
+["FMEA 失效模式與影響分析","事先列出可能的失效，評估嚴重度、發生率與偵測度，排出優先處理順序（常用 RPN）。","DVT 風險盤點與設計審查。"],
+["STP 與 4P","區隔、目標、定位；產品、價格、通路、推廣。","品牌端定位、定價與上市計畫。"],
+["Kano 模型與 JTBD","Kano 區分基本、期望、魅力需求；JTBD 關注使用者「雇用」產品來完成什麼任務。","規格優先序與賣點選擇。"],
+["產品生命週期（PLC）","導入、成長、成熟、衰退四階段，每階段的策略與利潤結構不同。","定價、庫存與衍生機種策略。"],
+["牛鞭效應與 S&OP","需求訊號在供應鏈中被逐級放大；S&OP 用來對齊需求與供給。","預測、備貨與庫存管理。"],
+["專案鐵三角","範圍、時間、成本（與品質）彼此牽制，動一個就會影響其他。","做決策前的取捨框架。"]
+];
+
+const ROADMAP = {
+6:[
+{m:1,t:"打底：產業地圖與開發流程",g:"能用自己的話講清楚 EVT/DVT/PVT，以及品牌端與代工端的差別。",
+ tasks:["讀完本頁「產業地圖」與「開發流程」，並用自己的話重寫一遍","選一個你熟悉的消費性電子產品，看一篇 iFixit 拆解，整理成筆記","列出該產品的主要零組件，並標出可能的供應商類型","找 1～2 位硬體 PM 或 NPI 的分享（LinkedIn、Podcast、Meetup）","從「名詞速查」整理 30 個你最常遇到的縮寫"],
+ out:"一頁 EVT/DVT/PVT 流程圖＋名詞筆記"},
+{m:2,t:"技術素養：看懂產品與規格",g:"能讀懂規格書，在會議中聽得懂工程師，並問出關鍵問題。",
+ tasks:["消費性電子：每個類別（SoC、記憶體、顯示、電池、無線、散熱）各讀一篇入門文章","伺服器：了解 CPU／GPU、記憶體、儲存、PCIe、BMC、散熱與機櫃","讀 3 份同類產品的 spec sheet 並畫出 block diagram","了解 RF、EMC、熱設計的基本概念","整理「前五大成本零件」與其供應商"],
+ out:"競品規格比較表＋產品 block diagram"},
+{m:3,t:"成本與供應鏈",g:"能建立 BOM 成本模型，並解釋成本變動對毛利的影響。",
+ tasks:["把本頁成本試算器延伸成 Excel 版 BOM 成本模型","學習報價結構、MOQ、LTA、第二供應來源","看懂缺料報表與 MRP 的基本概念","模擬一次「記憶體漲價 20%」與「匯率變動」對毛利的影響","理解 NRE 與攤提的邏輯"],
+ out:"Excel BOM＋成本模型（含 3 組情境）"},
+{m:4,t:"製造、品質與認證",g:"能解釋產線流程、良率，以及認證如何影響上市時間。",
+ tasks:["理解 SMT、組裝、測試、包裝流程與各站的不良來源","學習 FPY、DPPM、Pareto 並用假資料練習","用一個假想案例寫一份 8D 與 FMEA","整理目標市場所需認證，做出時程表","了解可靠度測試項目：高低溫、跌落、振動、ESD"],
+ out:"8D 範例＋認證時程表"},
+{m:5,t:"產品與商業",g:"能寫出一份完整的 PRD 與上市計畫。",
+ tasks:["寫一份完整 PRD：目標客群、規格與優先序、目標成本、定價","做一頁 GTM 計畫與銷售預測","了解通路與 sell-in／sell-through 的差別","練習規劃產品 roadmap（至少兩代）","分析 3 家目標公司的 JD，歸納所需技能與差距"],
+ out:"PRD＋GTM 一頁計畫＋JD 差距分析"},
+{m:6,t:"整合作品集與求職",g:"能把所有學習整合成可展示的作品，並自信應對面試。",
+ tasks:["完成 Capstone：為假想產品寫一份完整 NPI 計畫（主時程、Gate 出關條件、BOM 與成本、風險、build plan）","改寫履歷，把專案管理經驗翻成硬體語言（見上方對照表）","準備面試題庫，並找人做模擬面試","為每間目標公司客製化投遞並找內部人脈","針對最弱的一環補強，必要時考慮證照（如 PMP）"],
+ out:"Capstone 作品集（PDF）＋新履歷＋面試故事庫（STAR）"}
+],
+3:[
+{m:1,t:"流程、技術與 BOM 入門",g:"建立整體地圖：流程、零組件、BOM 與成本結構。",
+ tasks:["讀完本頁「產業地圖」「開發流程」「BOM 與成本」","看一篇 iFixit 拆解，整理成筆記並畫出 block diagram","整理 30 個常用縮寫（從「名詞速查」開始）","用成本試算器做 3 組情境","找 1～2 位硬體 PM 或 NPI 的分享"],
+ out:"EVT/DVT/PVT 流程圖＋block diagram＋成本情境表"},
+{m:2,t:"供應鏈、製造、品質與產品",g:"補上供應鏈、製造與品質，並開始練習 PRD 與時程。",
+ tasks:["理解缺料、MRP、交期、MOQ、第二供應來源","理解產線流程、良率（FPY）、Pareto、8D","整理目標市場所需認證，做出時程表","寫一份簡版 PRD（含目標成本與定價）","畫出假想產品的主時程（含 Gate）"],
+ out:"PRD＋主時程＋認證時程表"},
+{m:3,t:"作品集與求職",g:"整合成作品，並準備面試。",
+ tasks:["完成 Capstone：假想產品的完整 NPI 計畫（主時程、Gate、BOM、風險、build plan）","改寫履歷，翻成硬體語言","練習面試題庫，找人模擬面試","分析 3 家目標公司 JD，客製化投遞","補強最弱的一環"],
+ out:"Capstone 作品集＋新履歷＋面試故事庫"}
+]};
+
+const QCATS = {basic:"基礎觀念",scenario:"情境題",cost:"成本與定價",role:"職位專屬",behavior:"行為與動機"};
+const QA = [
+{c:"basic",q:"請用你自己的話說明 EVT、DVT、PVT 的差別，並說明各階段 PM 的重點。",
+ look:"是否理解每個階段「在驗證什麼」，而不只是背縮寫。",
+ ans:["EVT：驗證可行性，樣機少、設計常改；PM 重點是規格、風險與成本差距","DVT：驗證設計符合規格，含可靠度與認證；PM 重點是認證時程、變更管理與 BOM 凍結","PVT：驗證量產，在量產線上試產；PM 重點是良率、產能爬坡與量產放行","補一句：各家命名與數量不同，我會先確認貴公司的定義"]},
+{c:"basic",q:"為什麼硬體不能像軟體一樣「快速上線、再迭代」？",
+ look:"是否理解硬體的固定成本與變更成本。",
+ ans:["模具、治具、認證、庫存都是沉沒成本","一旦量產，修改要處理庫存、重新驗證與認證","因此用階段關卡把風險往前推","但韌體與軟體仍可更新，所以常用混合式方法"]},
+{c:"basic",q:"你沒有工程背景，要怎麼和工程師合作？",
+ look:"謙虛但有方法；知道自己的價值在哪裡。",
+ ans:["承認不足，但展示學習方法：拆解產品、讀 spec、持續問「為什麼」","用結構化問題：根因？影響？選項？預估時間？不確定度？","把焦點放在我能提供的價值：時程、風險、跨部門協調、成本","舉一個過去跨領域專案的例子"]},
+{c:"basic",q:"你會怎麼衡量一個硬體產品的成功？",
+ look:"是否能分辨品牌端與代工端的指標，並與商業結果連結。",
+ ans:["品牌端：營收與銷量、毛利率、sell-through、庫存週轉、退貨與 RMA 率、評價、上市準時","代工端：OTD、良率、成本達成、客戶滿意度、變更次數","共通：是否在預算、時程、品質內交付"]},
+{c:"scenario",q:"DVT 發現嚴重的設計問題（例如散熱不足），但上市日期不能延，你怎麼辦？",
+ look:"取捨與溝通能力；不是硬撐，也不是直接說要延期。",
+ ans:["先釐清問題嚴重度與根因：影響範圍、重現率、是否影響安全或認證","列出選項：（A）設計修正（改機構或模具）（B）韌體緩解（例如風扇曲線、降頻）（C）規格調整（D）延後上市","每個選項評估時程、成本、品質與風險","帶資料與建議向決策者提案，而不是只丟問題","記錄決策並持續追蹤"]},
+{c:"scenario",q:"PVT 良率只有 85%，目標是 95%，你會怎麼處理？",
+ look:"系統性的問題解決與資料分析能力。",
+ ans:["用 Pareto 找出前幾大不良項目，通常少數項目貢獻多數不良","分辨根因類型：設計、製程與治具、物料（供應商）、人員與 SOP","各 owner 啟動 8D，並設定期限","先處理影響最大且可快速改善的項目（quick wins）","每日追蹤良率趨勢與對策效果","若屬設計問題，評估 ECN 的成本與時程衝擊，並與客戶或管理層同步放行風險"]},
+{c:"scenario",q:"關鍵零件突然缺料，交期從 8 週變成 20 週，你會怎麼做？",
+ look:"風險意識、供應鏈知識與優先順序判斷。",
+ ans:["先量化缺口：受影響的 SKU、build 與出貨計畫、時間點","盤點方案：第二供應來源或替代料（需驗證與認證）、spot buy（成本）、向原廠升級爭取配給、調整配置或排程","評估每個方案的成本、品質與時程風險","與業務或客戶溝通優先順序：哪些訂單先出","事後建立長交期料的預警機制"]},
+{c:"scenario",q:"DVT 後期，客戶（或主管）要求新增功能或改規格，你怎麼處理？",
+ look:"變更控制與談判能力。",
+ ans:["不立刻拒絕，也不直接答應：先做影響評估（研發工時、模具、認證重測、BOM 成本、時程、風險）","把 trade-off 呈現給決策者，並提出替代方案：放下一代、分階段、後續以軟體更新","代工端：以書面確認變更、重新報價與 NRE、調整時程","走 ECN 正式流程，更新所有相關文件"]},
+{c:"scenario",q:"你怎麼判斷 DVT 可以進入 PVT？",
+ look:"是否以「出關條件」而不是感覺做決策。",
+ ans:["回到出關條件：主要功能與規格達成、可靠度測試通過或有結案計畫、認證進度","設計與 BOM 凍結，open issue 的數量與嚴重度可接受","模具、治具、測試程式 ready；供應商與物料 ready","良率預估合理","Gate review 決策：Go、Conditional Go（附條件）或 Hold"]},
+{c:"scenario",q:"認證測試沒過（例如 RF 或 EMC），你會怎麼處理？",
+ look:"對認證流程與時程影響的理解。",
+ ans:["取得失敗細節：頻段、數值、餘裕（margin）","與研發及實驗室分析根因，區分設計問題與樣品差異","評估修正方式（濾波、屏蔽、天線調整、韌體設定）以及是否需要改 PCB 或機構","重新預約重測、評估對上市日的影響","預防：下次提早做預測試（pre-compliance）"]},
+{c:"cost",q:"如何把一個產品的 BOM 成本降低 10%？",
+ look:"系統性拆解成本的能力，以及對品質與時程的風險意識。",
+ ans:["先拆解：用 Pareto 找出前 20% 的零件，常占大部分成本","評估方向：規格再檢視、替代料與二供、議價與長約、設計簡化（VA／VE）、共用零件、良率改善、包裝與物流","評估對品質、認證、時程的衝擊","用 ROI 與 NRE 回收期排優先順序","建立追蹤機制，驗證成果"]},
+{c:"cost",q:"品牌端要怎麼訂售價？",
+ look:"是否能同時從成本、競品、價值三個角度思考。",
+ ans:["三個視角：成本（目標毛利）、競品（價格帶與規格對比）、價值（客戶願付價格）","由目標毛利與通路毛利率反推可接受成本","考慮匯率、稅、促銷、價格保護與生命週期降價","做情境與敏感度分析，與業務與財務對齊"]},
+{c:"cost",q:"毛利率與加成率（markup）有什麼不同？",
+ look:"基本財務概念是否正確。",
+ ans:["毛利率 =（售價 － 成本）÷ 售價","加成率 =（售價 － 成本）÷ 成本","例：成本 70、售價 100，毛利率 30%、加成率約 42.9%","倒推價格時要用對公式，否則會低估或高估售價"]},
+{c:"role",q:"（代工端）客戶來要報價，你會怎麼準備？",
+ look:"對成本結構、風險與談判的理解。",
+ ans:["先釐清需求：規格、數量、時程、驗收標準","拆成材料、加工、測試、包裝、物流、NRE、保固與風險準備","標註假設：良率、匯率、零件價格有效期","與採購、製造、研發共同審核","確認利潤與策略價值（長期合作、量）","留下變更與調價條款"]},
+{c:"role",q:"（伺服器）新 CPU 平台的 BIOS／韌體不穩，影響 DVT 時程，你怎麼辦？",
+ look:"對平台依賴與升級溝通的處理方式。",
+ ans:["確認問題範圍與 owner：平台商 vs 自家 BIOS／BMC 團隊","向晶片商或平台商窗口升級（escalate），取得修復時程","調整測試排程：先平行測試不受影響的項目","評估是否採 workaround 或暫時版本繼續驗證","與客戶同步風險與新時程，每日追蹤 issue"]},
+{c:"role",q:"（品牌端）如何做銷售預測並避免庫存風險？",
+ look:"需求預測與庫存管理的基本認識。",
+ ans:["區分 sell-in（賣給通路）、sell-through（通路賣給消費者）與 sell-out","結合歷史資料、檔期、競品與通路回饋做滾動預測","設定安全庫存與週轉目標（DOI／WOI）","定期做 S&OP，與供應鏈、業務對齊","對滯銷風險預先規劃促銷與調貨"]},
+{c:"behavior",q:"請分享一次你推動跨部門專案遇到衝突的經驗。",
+ look:"具體情境、你的行為、可衡量的結果與反思（STAR）。",
+ ans:["Situation／Task：簡述專案與衝突，例如目標不一致或資源衝突","Action：如何釐清各方真正的需求、用資料呈現、提出折衷方案、取得上層對齊","Result：量化結果（準時、成本、關係）","Reflection：學到了什麼，下次會怎麼做"]},
+{c:"behavior",q:"為什麼想轉入硬體產業？為什麼是我們公司？",
+ look:"動機是否具體，是否有做功課。",
+ ans:["連結你的專案管理能力與硬體專案的高複雜度","展示已做的功課：作品集、拆解、成本模型","針對該公司的產品線與市場位置，說出具體想法","避免只說「對科技有興趣」"]}
+];
+
+const GCATS = {flow:"流程與專案",cost:"成本與供應鏈",mfg:"製造與品質",reg:"認證與法規",biz:"產業與商業",tech:"硬體與技術"};
+const GLOSS = [
+// flow
+["EVT","Engineering Validation Test","工程驗證測試。驗證設計概念可行、核心功能能運作。","flow"],
+["DVT","Design Validation Test","設計驗證測試。設計接近定版，完成可靠度與認證等完整驗證。","flow"],
+["PVT","Production Validation Test","生產驗證測試。在量產線上試產，驗證製程、良率與產能。","flow"],
+["MP","Mass Production","量產。","flow"],
+["NPI","New Product Introduction","新產品導入。從設計到量產的整體流程與管理活動。","flow"],
+["PRD","Product Requirements Document","產品需求文件，定義產品要解決什麼問題、功能與規格需求。","flow"],
+["MRD","Market Requirements Document","市場需求文件，從市場與客戶角度描述需求。","flow"],
+["Kick-off","專案啟動","立項後召開的啟動會議，宣告目標、範圍、分工與時程。","flow"],
+["Spec Freeze","規格凍結","規格定案，之後變更需走正式流程。","flow"],
+["Design Freeze","設計凍結","設計定版，之後只處理重大問題。","flow"],
+["BOM Freeze","BOM 凍結","料號與供應商定案，可下量產訂單。","flow"],
+["Gate Review","關卡審查","每階段結束時，檢核出關條件並決定 Go／No-Go 的會議。","flow"],
+["Exit Criteria","出關條件","通過某個階段、進入下一階段必須達成的條件。","flow"],
+["WBS","Work Breakdown Structure","工作分解結構，把專案拆成可管理的工作項目。","flow"],
+["Critical Path","關鍵路徑","決定專案最短完成時間的一串相依工作，延遲會直接拖後整體。","flow"],
+["RACI","Responsible／Accountable／Consulted／Informed","角色責任矩陣，釐清誰負責、誰裁決、誰被諮詢、誰被告知。","flow"],
+["RAID Log","Risks／Assumptions／Issues／Dependencies","風險、假設、議題、相依性的登錄表。","flow"],
+["Build Plan","試產計畫","規劃每次試產（build）的數量、版本、料件、地點與時程。","flow"],
+["ECR／ECN／ECO","Engineering Change Request／Notice／Order","工程變更申請／通知／命令，正式的設計變更流程。","flow"],
+["Golden Sample","標準樣品","作為品質與外觀比對基準的樣品。","flow"],
+["Pilot Run","試產","量產前的小批試產，有些公司稱為 PP。","flow"],
+["Ramp","產能爬坡","從試產到量產，產量逐步拉升到目標的過程。","flow"],
+["EOL","End of Life","產品或零件停產。","flow"],
+["LTB","Last Time Buy","零件停產前的最後一次採購。","flow"],
+["PCN","Product Change Notification","零件原廠發出的產品變更或停產通知。","flow"],
+["TTM","Time to Market","上市時間。","flow"],
+["PLM","Product Lifecycle Management","產品生命週期管理系統，管理 BOM、圖面、版本與變更。","flow"],
+["Reference Design","參考設計","晶片商提供的參考電路與設計，可加速開發。","flow"],
+["EVB","Evaluation Board","評估板，用來驗證晶片或平台功能的開發板。","flow"],
+["Waiver","特採／豁免","明知未完全達標，但經核准後仍放行的例外處理。","flow"],
+// cost
+["BOM","Bill of Materials","物料清單，產品所需的所有零組件與數量。","cost"],
+["EBOM／MBOM","Engineering／Manufacturing BOM","工程 BOM（設計視角）與製造 BOM（生產視角）。","cost"],
+["AVL／ASL","Approved Vendor／Supplier List","核准供應商名單。","cost"],
+["2nd Source","第二供應來源","同一零件由第二家供應商供貨，可分散風險與增加議價力。","cost"],
+["RFQ","Request for Quotation","詢價請求，客戶要求供應商提供報價。","cost"],
+["RFI","Request for Information","資訊請求，向供應商蒐集能力與資訊。","cost"],
+["NRE","Non-Recurring Engineering","一次性工程費用，如模具、治具、認證、開發人力，常攤提到單價。","cost"],
+["MOQ","Minimum Order Quantity","最小訂購量。","cost"],
+["MPQ","Minimum Package Quantity","最小包裝量。","cost"],
+["Lead Time","交期（LT）","從下單到收到貨的時間。","cost"],
+["COGS","Cost of Goods Sold","銷貨成本，直接與產品相關的成本。","cost"],
+["GM","Gross Margin","毛利率 =（售價－成本）÷ 售價。","cost"],
+["ASP","Average Selling Price","平均售價。","cost"],
+["MSRP","Manufacturer's Suggested Retail Price","建議零售價。","cost"],
+["Landed Cost","到岸成本","含運費、保險、關稅等，實際到貨的成本。","cost"],
+["Target Costing","目標成本法","由售價與目標毛利，倒推可接受的成本。","cost"],
+["Should-cost","應有成本","依零件、製程與合理利潤推算「應該要多少錢」，用於議價與檢核報價。","cost"],
+["VA／VE","Value Analysis／Value Engineering","價值分析／價值工程，在不降低功能下降低成本。","cost"],
+["Cost Down","降成本","降低產品成本的專案或活動。","cost"],
+["TCO","Total Cost of Ownership","總持有成本，含採購、電力、維運等整體成本（伺服器常用）。","cost"],
+["LTA","Long Term Agreement","長期供貨合約，常用於鎖定價格與供貨。","cost"],
+["MRP","Material Requirements Planning","物料需求規劃，依生產計畫計算需要的物料與時間。","cost"],
+["S&OP","Sales & Operations Planning","銷售與營運規劃，對齊需求、供給與財務。","cost"],
+["Shortage","缺料","物料不足以支應生產或出貨。","cost"],
+["Spot Buy","現貨採購","臨時向現貨市場購買，通常價格較高。","cost"],
+["Allocation","配給","缺貨時，原廠依優先順序分配供貨量。","cost"],
+["Incoterms","國貿條規（EXW／FOB／DDP）","規範買賣雙方在運輸、風險與費用上的責任，如 EXW、FOB、DDP。","cost"],
+["Safety Stock","安全庫存","為因應需求或供給波動而保留的緩衝庫存。","cost"],
+["DOI／WOI","Days／Weeks of Inventory","庫存天數／週數，衡量庫存週轉。","cost"],
+["Break-even","損益平衡","收入剛好等於成本的銷量或條件。","cost"],
+// mfg
+["SMT","Surface Mount Technology","表面黏著技術，把零件貼到 PCB 上的主要製程。","mfg"],
+["DIP","Dual In-line Package","插件製程，零件腳穿過 PCB 孔後焊接。","mfg"],
+["PCB／PCBA","Printed Circuit Board／Assembly","印刷電路板／已組裝零件的電路板。","mfg"],
+["ICT","In-Circuit Test","在線測試，檢查 PCBA 的元件與焊接是否正常。","mfg"],
+["FCT","Functional Circuit Test","功能測試，驗證板子或整機功能。","mfg"],
+["AOI","Automated Optical Inspection","自動光學檢查，用影像檢查焊接與零件。","mfg"],
+["Burn-in","燒機","長時間運行以提早篩出早期故障。","mfg"],
+["FPY","First Pass Yield","一次通過率，未經重工就通過的比例。","mfg"],
+["Yield","良率","合格品占生產總數的比例。","mfg"],
+["UPH","Units Per Hour","每小時產出台數，衡量產線節拍。","mfg"],
+["DPPM","Defective Parts Per Million","每百萬個產品的不良數。","mfg"],
+["AQL","Acceptance Quality Limit","可接受品質水準，抽樣檢驗的判定標準。","mfg"],
+["SPC","Statistical Process Control","統計製程管制，用統計方法監控製程穩定度。","mfg"],
+["Cpk","Process Capability Index","製程能力指標，衡量製程滿足規格的能力。","mfg"],
+["FMEA","Failure Mode and Effects Analysis","失效模式與影響分析。","mfg"],
+["8D","Eight Disciplines","八大步驟問題解決法，用於處理品質問題。","mfg"],
+["DFM／DFA／DFT","Design for Manufacturing／Assembly／Test","為可製造、可組裝、可測試而做的設計。","mfg"],
+["FAI","First Article Inspection","首件檢驗，驗證第一件產品是否符合規格。","mfg"],
+["IQC／IPQC／OQC","Incoming／In-Process／Outgoing QC","來料／製程中／出貨前品質管制。","mfg"],
+["RMA","Return Material Authorization","退換貨授權，處理售後退貨與維修。","mfg"],
+["DOA","Dead on Arrival","開箱即故障。","mfg"],
+["MTBF","Mean Time Between Failures","平均故障間隔時間，可靠度指標。","mfg"],
+["HALT","Highly Accelerated Life Test","高加速壽命測試，用極端條件找出設計弱點。","mfg"],
+["Pareto","柏拉圖","依影響大小排序的圖，用於找出少數關鍵問題（80/20）。","mfg"],
+["SOP","Standard Operating Procedure","標準作業程序。","mfg"],
+["Fixture／Jig","治具","生產、測試或組裝時用於固定與輔助的工具。","mfg"],
+["Tooling","模具","用於製造塑膠或金屬零件的模具。","mfg"],
+["T1／T2","試模（Tooling Trial）","模具製作後的第一次、第二次試模與修模。","mfg"],
+["CMF","Color／Material／Finish","顏色、材質、表面處理。","mfg"],
+["ISTA","國際安全運輸協會","制定包裝與運輸測試標準的組織，常指其測試規範。","mfg"],
+// reg
+["NCC","國家通訊傳播委員會","台灣，管理無線通訊設備的型式認證。","reg"],
+["BSMI","經濟部標準檢驗局","台灣商品檢驗機關，資訊與家電等產品需符合安規與 EMC 要求。","reg"],
+["FCC","Federal Communications Commission","美國聯邦通訊委員會，電磁與無線法規。","reg"],
+["CE","Conformité Européenne","歐盟符合性標示，產品進入歐盟市場的要求。","reg"],
+["UL","Underwriters Laboratories","美國安全認證機構。","reg"],
+["RoHS","Restriction of Hazardous Substances","有害物質限用指令。","reg"],
+["REACH","Registration, Evaluation, Authorisation of Chemicals","歐盟化學品法規。","reg"],
+["EMC","Electromagnetic Compatibility","電磁相容，設備不干擾他人，也不被干擾。","reg"],
+["SAR","Specific Absorption Rate","比吸收率，衡量無線設備對人體的電磁能量吸收。","reg"],
+["ESD","Electrostatic Discharge","靜電放電，是電子產品常見的可靠度測試項目。","reg"],
+["UN 38.3","聯合國鋰電池運輸測試","鋰電池運輸安全測試要求。","reg"],
+["Energy Star","能源之星","能源效率認證標章。","reg"],
+// biz
+["ODM","Original Design Manufacturer","自行設計與製造，品牌商選用後以自己品牌出貨。","biz"],
+["OEM","Original Equipment Manufacturer","依客戶設計與規格代工製造。","biz"],
+["JDM","Joint Design Manufacturer","與客戶共同設計並製造。","biz"],
+["EMS","Electronics Manufacturing Services","電子製造服務，以組裝與測試為主。","biz"],
+["OBM","Own Brand Manufacturing","自有品牌製造。","biz"],
+["Design Win","設計導入／贏得專案","產品設計被客戶採用並取得訂單。","biz"],
+["SKU","Stock Keeping Unit","庫存單位，不同配置、顏色或地區版本各有自己的 SKU。","biz"],
+["GTM","Go-To-Market","上市策略與計畫。","biz"],
+["PMM","Product Marketing Manager","產品行銷經理。","biz"],
+["Sell-in／Sell-through／Sell-out","銷售層級","品牌賣給通路／通路賣給消費者／終端銷售，三者的差距即通路庫存變化。","biz"],
+["OTD","On-Time Delivery","準時交付率。","biz"],
+["CSP","Cloud Service Provider","雲端服務供應商，如大型雲端公司。","biz"],
+["TAM／SAM／SOM","Market Sizing","整體市場／可服務市場／可取得市場。","biz"],
+["STP","Segmentation, Targeting, Positioning","區隔、目標市場選擇、定位。","biz"],
+["Roadmap","產品藍圖","規劃產品未來世代與功能的時程藍圖。","biz"],
+["JTBD","Jobs To Be Done","使用者「雇用」產品來完成的任務。","biz"],
+["Forecast","預測","對未來銷量或需求的預估。","biz"],
+// tech
+["SoC","System on Chip","系統單晶片，整合處理器與多種功能的晶片。","tech"],
+["LPDDR","Low Power DDR","低功耗記憶體，常用於行動與輕薄裝置。","tech"],
+["BIOS／UEFI","Basic Input/Output System／Unified Extensible Firmware Interface","主機板的開機韌體，負責硬體初始化。","tech"],
+["BMC","Baseboard Management Controller","基板管理控制器，伺服器遠端管理與監控的核心晶片。","tech"],
+["IPMI／Redfish","Server Management Standards","伺服器管理介面標準，Redfish 為較新的 API 標準。","tech"],
+["PCIe","PCI Express","高速序列擴充匯流排，連接 GPU、網卡、SSD 等。","tech"],
+["NVMe","Non-Volatile Memory Express","走 PCIe 的高速儲存協定。","tech"],
+["RAID","Redundant Array of Independent Disks","磁碟陣列，提升效能或可靠度。","tech"],
+["NIC","Network Interface Card","網路卡。","tech"],
+["PSU","Power Supply Unit","電源供應器，伺服器常用 1+1 備援。","tech"],
+["1U／2U","機櫃高度單位","1U 約 4.45 公分，伺服器以 U 為單位計算高度。","tech"],
+["Rack","機櫃","安裝伺服器與網路設備的標準機架。","tech"],
+["OCP","Open Compute Project","開放運算計畫，推動資料中心硬體開放規格。","tech"],
+["HCL","Hardware Compatibility List","硬體相容性清單，列出經驗證可相容的硬體。","tech"],
+["CTO／BTO","Configure／Build to Order","依客戶訂單配置或組裝的接單模式。","tech"],
+["TDP","Thermal Design Power","熱設計功耗，散熱設計的參考值。","tech"],
+["PUE","Power Usage Effectiveness","電力使用效率，資料中心總耗電除以 IT 設備耗電。","tech"],
+["RAS","Reliability, Availability, Serviceability","可靠度、可用度、可維護性，伺服器的重要特性。","tech"],
+["Liquid Cooling","液冷","以液體帶走熱量的散熱方式，高功耗 AI 伺服器漸趨普遍。","tech"],
+["SI／PI","Signal／Power Integrity","訊號完整性／電源完整性，高速電路設計的關鍵。","tech"],
+["L6／L10／L11","機櫃整合層級","業界常用來描述系統、機櫃與多機櫃整合層級，定義各家略有不同。","tech"],
+["80 PLUS","電源效率認證","電源供應器的轉換效率認證等級。","tech"]
+];
+/* ================= LOGIC ================= */
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const esc = s => String(s).replace(/[&<>]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
+const store = {
+  get(k, d){ try{ const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); }catch(e){ return d; } },
+  set(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
+};
+const ul = (a, cls) => '<ul' + (cls ? ' class="' + cls + '"' : '') + '>' + a.map(x => '<li>' + x + '</li>').join('') + '</ul>';
+const roleTag = s => s.map(x => x === 'brand' ? '<span class="tag t-brand" data-role-only="brand">品牌端</span>' : '<span class="tag t-odm" data-role-only="odm">代工端</span>').join('');
+
+/* ---------- filters ---------- */
+function setFilter(kind, val){
+  document.body.dataset[kind] = val;
+  $$('[data-set="' + kind + '"]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.val === val)));
+  store.set('hwpm-' + kind, val);
+}
+$$('[data-set]').forEach(b => b.addEventListener('click', () => setFilter(b.dataset.set, b.dataset.val)));
+setFilter('seg', store.get('hwpm-seg', 'all'));
+setFilter('role', store.get('hwpm-role', 'all'));
+
+/* ---------- nav ---------- */
+const mnav = $('.mnav');
+$$('.toc a').forEach(a => { const c = a.cloneNode(true); mnav.appendChild(c); });
+const secs = $$('section.sec');
+if ('IntersectionObserver' in window){
+  const io = new IntersectionObserver(es => {
+    es.forEach(e => {
+      if (e.isIntersecting){
+        $$('.toc a').forEach(a => a.classList.toggle('on', a.getAttribute('href') === '#' + e.target.id));
+      }
+    });
+  }, { rootMargin: '-25% 0px -65% 0px' });
+  secs.forEach(s => io.observe(s));
+}
+
+/* ---------- stage explorer ---------- */
+const stepper = $('#stepper');
+const gateNames = ['Kick-off', 'Spec Freeze', 'Design Freeze', 'MP Release'];
+function buildStepper(){
+  let h = '';
+  STAGES.forEach((s, i) => {
+    h += '<li><button class="pad" role="tab" id="tab-' + i + '" data-i="' + i + '" aria-selected="false" aria-controls="stagePanel"><span class="dot' + (i === 0 ? ' zh' : '') + '">' + s.acr + '</span><span class="nm">' + s.name.split('（')[0] + '</span></button></li>';
+    if (i < STAGES.length - 1) h += '<li class="gate" aria-hidden="true"><span>' + gateNames[i] + '</span></li>';
+  });
+  stepper.innerHTML = h;
+  $$('.pad', stepper).forEach(b => {
+    b.addEventListener('click', () => renderStage(+b.dataset.i));
+    b.addEventListener('keydown', e => {
+      const i = +b.dataset.i;
+      if (e.key === 'ArrowRight' && i < STAGES.length - 1){ renderStage(i + 1); $('#tab-' + (i + 1)).focus(); }
+      if (e.key === 'ArrowLeft' && i > 0){ renderStage(i - 1); $('#tab-' + (i - 1)).focus(); }
+    });
+  });
+}
+function renderStage(i){
+  const s = STAGES[i];
+  $$('.pad', stepper).forEach(b => b.setAttribute('aria-selected', String(+b.dataset.i === i)));
+  const kv = '<dl class="kv">' + s.state.map(x => '<div><dt>' + x[0] + '</dt><dd>' + x[1] + '</dd></div>').join('') + '</dl>';
+  const risks = '<div class="tbl"><table class="risk"><thead><tr><th>常見風險</th><th>常見對策</th></tr></thead><tbody>' + s.risks.map(r => '<tr><td>' + r[0] + '</td><td>' + r[1] + '</td></tr>').join('') + '</tbody></table></div>';
+  $('#stagePanel').setAttribute('aria-labelledby', 'tab-' + i);
+  $('#stagePanel').innerHTML =
+    '<div class="panel-head"><h3><span class="acr">' + s.acr + '</span>' + s.name + '</h3><p class="q">' + s.q + '</p><p class="dur">概略時間感：' + s.dur + '</p></div>' +
+    kv +
+    '<div class="blk"><h4>主要活動</h4>' + ul(s.activities) + '</div>' +
+    '<div class="blk"><h4>出關條件（過關要達成什麼）</h4>' + ul(s.exit, 'checks') + '</div>' +
+    '<div class="cols">' +
+      '<div class="col con" data-seg-only="consumer"><h4><span class="tag t-con">消費性電子</span>這一階段的重點</h4>' + ul(s.consumer) + '</div>' +
+      '<div class="col srv" data-seg-only="server"><h4><span class="tag t-srv">伺服器</span>這一階段的重點</h4>' + ul(s.server) + '</div>' +
+    '</div>' +
+    '<div class="cols">' +
+      '<div class="col brand" data-role-only="brand"><h4><span class="tag t-brand">品牌端</span>PM 要做什麼</h4>' + ul(s.brand) + '</div>' +
+      '<div class="col odm" data-role-only="odm"><h4><span class="tag t-odm">代工端</span>PM 要做什麼</h4>' + ul(s.odm) + '</div>' +
+    '</div>' +
+    '<div class="blk"><h4>常見產出物</h4>' + s.outputs.map(o => '<span class="chip">' + o + '</span>').join('') + '</div>' +
+    '<div class="blk"><h4>常見風險與對策</h4>' + risks + '</div>';
+  store.set('hwpm-stage', i);
+}
+buildStepper();
+renderStage(0);
+$$('a[data-stage]').forEach(a => a.addEventListener('click', () => renderStage(+a.dataset.stage)));
+
+/* ---------- roles ---------- */
+$('#roles').innerHTML = ROLES.map(r => {
+  const only = r.side.length === 1 ? ' data-role-only="' + r.side[0] + '"' : '';
+  return '<details class="row"' + only + '><summary><span class="ttl">' + r.ttl + '</span><span class="en">' + r.en + '</span><span class="tags">' + roleTag(r.side) + '<span class="tag t-plus">' + FIT_NOTE + '：' + r.fit + '</span></span></summary><div class="body"><dl>' +
+    '<dt>工作重心</dt><dd>' + r.focus + '</dd>' +
+    '<dt>主要產出</dt><dd>' + ul(r.out) + '</dd>' +
+    '<dt>核心技能</dt><dd>' + r.skills + '</dd>' +
+    '<dt>對你來說</dt><dd>' + r.gap + '</dd>' +
+    '<dt>搜尋關鍵字</dt><dd>' + r.kw + '</dd>' +
+    '</dl></div></details>';
+}).join('');
+
+/* ---------- stakeholders ---------- */
+$('#stake').innerHTML = '<thead><tr><th>部門</th><th>負責什麼</th><th>PM 向他們要什麼</th><th>你可以問的問題</th></tr></thead><tbody>' +
+  STAKE.map(s => '<tr><th>' + s[0] + '</th><td>' + s[1] + '</td><td>' + s[2] + '</td><td>' + s[3] + '</td></tr>').join('') + '</tbody>';
+
+/* ---------- skills ---------- */
+const priClass = { '必備': 't-must', '重要': 't-imp', '加分': 't-plus' };
+$('#skillList').innerHTML = SKILLS.map(s =>
+  '<details class="row"><summary><span class="ttl">' + s.ttl + '</span><span class="tags">' +
+  '<span class="tag ' + priClass[s.p.brand] + '" data-role-only="brand">品牌端：' + s.p.brand + '</span>' +
+  '<span class="tag ' + priClass[s.p.odm] + '" data-role-only="odm">代工端：' + s.p.odm + '</span></span></summary><div class="body"><dl>' +
+  '<dt>為什麼重要</dt><dd>' + s.why + '</dd>' +
+  '<dt>具體怎麼做</dt><dd>' + ul(s.how) + '</dd>' +
+  '<dt>常用工具</dt><dd>' + s.tools.map(t => '<span class="chip">' + t + '</span>').join('') + '</dd>' +
+  '<dt>相關理論</dt><dd>' + s.theory.map(t => '<span class="chip">' + t + '</span>').join('') + '</dd>' +
+  '<dt>怎麼開始練</dt><dd>' + s.start + '</dd>' +
+  '</dl></div></details>').join('');
+
+/* ---------- theories ---------- */
+$('#theoryList').innerHTML = THEORIES.map(t =>
+  '<div class="box"><b>' + t[0] + '</b><p>' + t[1] + '</p><dl><dt>用在哪裡：</dt><dd>' + t[2] + '</dd></dl></div>').join('');
+
+/* ---------- roadmap ---------- */
+let roadMode = store.get('hwpm-roadmode', 6);
+function roadKey(mode, m, t){ return 'hwpm-road-' + mode + '-' + m + '-' + t; }
+function renderRoad(){
+  $('#m3').setAttribute('aria-pressed', String(roadMode === 3));
+  $('#m6').setAttribute('aria-pressed', String(roadMode === 6));
+  $('#road').innerHTML = ROADMAP[roadMode].map(r =>
+    '<li><span class="mo">' + r.m + '</span><h3>第 ' + r.m + ' 個月：' + r.t + '</h3><p class="goal">目標：' + r.g + '</p><ul class="tasks">' +
+    r.tasks.map((t, i) => '<li><label><input type="checkbox" data-m="' + r.m + '" data-t="' + i + '"' + (store.get(roadKey(roadMode, r.m, i), false) ? ' checked' : '') + '><span>' + t + '</span></label></li>').join('') +
+    '</ul><p class="out"><b>本月產出：</b>' + r.out + '</p></li>').join('');
+  $$('#road input').forEach(cb => cb.addEventListener('change', () => {
+    store.set(roadKey(roadMode, +cb.dataset.m, +cb.dataset.t), cb.checked);
+    updateProg();
+  }));
+  updateProg();
+}
+function updateProg(){
+  const boxes = $$('#road input');
+  const done = boxes.filter(b => b.checked).length;
+  const pct = boxes.length ? Math.round(done / boxes.length * 100) : 0;
+  $('#roadPct').textContent = pct + '%';
+  $('#roadBar').style.width = pct + '%';
+  $('#roadCnt').textContent = done + ' / ' + boxes.length + ' 項任務完成';
+}
+$('#m3').addEventListener('click', () => { roadMode = 3; store.set('hwpm-roadmode', 3); renderRoad(); });
+$('#m6').addEventListener('click', () => { roadMode = 6; store.set('hwpm-roadmode', 6); renderRoad(); });
+renderRoad();
+
+/* ---------- interview ---------- */
+let qaCat = 'all';
+function renderQA(){
+  $('#qaChips').innerHTML = [['all', '全部']].concat(Object.entries(QCATS)).map(([k, v]) =>
+    '<button class="fchip" data-k="' + k + '" aria-pressed="' + (qaCat === k) + '">' + v + '</button>').join('');
+  $$('#qaChips .fchip').forEach(b => b.addEventListener('click', () => { qaCat = b.dataset.k; renderQA(); }));
+  $('#qa').innerHTML = QA.filter(x => qaCat === 'all' || x.c === qaCat).map(x =>
+    '<details class="row"><summary><span class="ttl">' + x.q + '</span><span class="tags"><span class="tag t-plus">' + QCATS[x.c] + '</span></span></summary><div class="body">' +
+    '<div class="look"><b>面試官想看：</b>' + x.look + '</div><h4>回答框架</h4>' + ul(x.ans) + '</div></details>').join('');
+}
+renderQA();
+
+/* ---------- glossary ---------- */
+let glCat = 'all';
+function renderGl(){
+  $('#glChips').innerHTML = [['all', '全部']].concat(Object.entries(GCATS)).map(([k, v]) =>
+    '<button class="fchip" data-k="' + k + '" aria-pressed="' + (glCat === k) + '">' + v + '</button>').join('');
+  $$('#glChips .fchip').forEach(b => b.addEventListener('click', () => { glCat = b.dataset.k; renderGl(); }));
+  const q = $('#glq').value.trim().toLowerCase();
+  const list = GLOSS.filter(g => (glCat === 'all' || g[3] === glCat) && (!q || (g[0] + ' ' + g[1] + ' ' + g[2]).toLowerCase().includes(q)));
+  $('#glCount').textContent = '共 ' + list.length + ' 個名詞';
+  $('#gl').innerHTML = list.length ? list.map(g =>
+    '<div class="it"><span class="tag t-plus c">' + GCATS[g[3]] + '</span><h4><span class="mono">' + esc(g[0]) + '</span></h4><p class="full">' + esc(g[1]) + '</p><p>' + esc(g[2]) + '</p></div>').join('')
+    : '<p>找不到符合的名詞。試試英文縮寫或換個關鍵字。</p>';
+}
+$('#glq').addEventListener('input', renderGl);
+renderGl();
+
+/* ---------- calculator ---------- */
+const money = n => isFinite(n) ? n.toLocaleString('zh-TW', { maximumFractionDigits: 1, minimumFractionDigits: 0 }) : '-';
+const val = id => { const v = parseFloat($('#' + id).value); return isFinite(v) ? v : 0; };
+function calc(){
+  const mat = val('c-mat'), asm = val('c-asm'), pack = val('c-pack'), log = val('c-log') / 100;
+  const nre = val('c-nre'), qty = Math.max(val('c-qty'), 1), war = val('c-war') / 100;
+  const gm = Math.min(val('c-gm') / 100, 0.95), ch = Math.min(val('c-ch') / 100, 0.95);
+  const parts = [
+    ['材料', mat, 's1'], ['加工與測試', asm, 's2'], ['包裝', pack, 's3'],
+    ['物流關稅', mat * log, 's4'], ['NRE 攤提', nre / qty, 's5'], ['保固準備', mat * war, 's6']
+  ];
+  const cogs = parts.reduce((a, p) => a + p[1], 0);
+  const ship = cogs / (1 - gm);
+  const retail = ship / (1 - ch);
+  $('#o-cogs').textContent = money(cogs);
+  $('#o-ship').textContent = money(ship);
+  $('#o-retail').textContent = money(retail);
+  $('#o-tax').textContent = money(retail * 1.05);
+  $('#o-stk').innerHTML = parts.map(p => '<i class="' + p[2] + '" style="width:' + (cogs ? p[1] / cogs * 100 : 0) + '%" title="' + p[0] + '"></i>').join('');
+  const cols = { s1: 'var(--s1)', s2: 'var(--s2)', s3: 'var(--s3)', s4: 'var(--s4)', s5: 'var(--s5)', s6: 'var(--s6)' };
+  $('#o-leg').innerHTML = parts.map(p => '<span style="--c:' + cols[p[2]] + '">' + p[0] + ' ' + money(p[1]) + '（' + (cogs ? (p[1] / cogs * 100).toFixed(0) : 0) + '%）</span>').join('');
+  const scen = [
+    ['按原本假設', 0, 1],
+    ['材料成本 ＋5%', 0.05, 1],
+    ['材料成本 ＋10%', 0.10, 1],
+    ['材料成本 ＋20%（例如記憶體大漲）', 0.20, 1],
+    ['銷量只有預估的一半（NRE 攤提加倍）', 0, 2]
+  ];
+  $('#o-sens').innerHTML = scen.map(s => {
+    const c = mat * (1 + s[1]) * (1 + log + war) + asm + pack + (nre / qty) * s[2];
+    const g = ship ? (ship - c) / ship : 0;
+    const diff = g - gm;
+    const cls = diff < -0.0005 ? ' class="neg"' : '';
+    return '<tr><td>' + s[0] + '</td><td>' + money(c) + '</td><td' + cls + '>' + (g * 100).toFixed(1) + '%' + (Math.abs(diff) > 0.0005 ? '（' + (diff > 0 ? '+' : '') + (diff * 100).toFixed(1) + ' 點）' : '') + '</td></tr>';
+  }).join('');
+}
+$$('.calc-in input').forEach(i => i.addEventListener('input', calc));
+calc();
+</script>
+</body>
+</html>
